@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "total_words": 10,
+    "source_file": "data/wordFrequency.xlsx",
+    "generated_date": "E:\\CompanyBuilding\\DictionaryApp\\lightning-dictionary",
+    "description": "Lightning Dictionary - Core vocabulary data"
+  },
+  "statistics": {
+    "parts_of_speech": {
+      "a": 2,
+      "v": 1,
+      "c": 1,
+      "i": 2,
+      "t": 1,
+      "p": 3
+    },
+    "frequency_ranges": {
+      "top_100": 10,
+      "top_1000": 0,
+      "top_5000": 0,
+      "rest": 0
+    }
+  },
+  "words": {
+    "the": {
+      "rank": 1,
+      "pos": "a",
+      "frequency": 50033612,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "be": {
+      "rank": 2,
+      "pos": "v",
+      "frequency": 32394756,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "and": {
+      "rank": 3,
+      "pos": "c",
+      "frequency": 24778098,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "a": {
+      "rank": 4,
+      "pos": "a",
+      "frequency": 24225478,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "of": {
+      "rank": 5,
+      "pos": "i",
+      "frequency": 23159162,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "to": {
+      "rank": 6,
+      "pos": "t",
+      "frequency": 16770155,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "in": {
+      "rank": 7,
+      "pos": "i",
+      "frequency": 15670692,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "i": {
+      "rank": 8,
+      "pos": "p",
+      "frequency": 14217601,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "you": {
+      "rank": 9,
+      "pos": "p",
+      "frequency": 12079413,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    },
+    "it": {
+      "rank": 10,
+      "pos": "p",
+      "frequency": 11042044,
+      "definitions": [],
+      "pronunciation": "",
+      "examples": []
+    }
+  }
+}
