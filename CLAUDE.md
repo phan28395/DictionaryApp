@@ -18,34 +18,34 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 ### Week 1-2: Development Environment & Project Setup
 
 #### Step 1.1: Environment Setup
-- [ ] **1.1.1** Install development tools
-  - [ ] Install Node.js (v18+) and npm
-  - [ ] Install Rust and Cargo
-  - [ ] Install Git
-  - [ ] Install VS Code with extensions
-- [ ] **1.1.2** Verify installations
-  - [ ] Run `node --version` (should show v18+)
-  - [ ] Run `rustc --version` (should show 1.70+)
-  - [ ] Run `cargo --version`
-  - [ ] Run `git --version`
+- [x] **1.1.1** Install development tools
+  - [x] Install Node.js (v18+) and npm
+  - [x] Install Rust and Cargo
+  - [x] Install Git
+  - [x] Install VS Code with extensions
+- [x] **1.1.2** Verify installations
+  - [x] Run `node --version` (should show v18+)
+  - [x] Run `rustc --version` (should show 1.70+)
+  - [x] Run `cargo --version`
+  - [x] Run `git --version`
 
 #### Step 1.2: Project Initialization
-- [ ] **1.2.1** Create project structure
+- [x] **1.2.1** Create project structure
   ```
-  popup-dictionary/
+  lightning-dictionary/
   ├── src-tauri/       (Rust backend)
   ├── src/             (React frontend)
   ├── data/            (Dictionary data)
   └── docs/            (Documentation)
   ```
 - [ ] **1.2.2** Initialize Tauri project
-  - [ ] Run `npm create tauri-app@latest`
-  - [ ] Choose: React, TypeScript, npm
-  - [ ] Project name: `popup-dictionary`
-- [ ] **1.2.3** Configure Git repository
-  - [ ] Initialize Git: `git init`
-  - [ ] Create `.gitignore`
-  - [ ] Initial commit
+  - [x] Run `npm create tauri-app@latest`
+  - [x] Choose: React, TypeScript, npm
+  - [x] Project name: `lightning-dictionary`
+- [x] **1.2.3** Configure Git repository
+  - [x] Initialize Git: `git init`
+  - [x] Create `.gitignore`
+  - [x] Initial commit
 
 #### Step 1.3: Data Processing Setup
 - [ ] **1.3.1** Process dictionary data files
