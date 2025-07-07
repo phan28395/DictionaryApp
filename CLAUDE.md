@@ -49,11 +49,10 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 
 #### Step 1.3: Data Processing Setup
 - [ ] **1.3.1** Process dictionary data files
-  - [ ] Parse `lemmas_60k.txt` for word list
-  - [ ] Extract top 10,000 words by frequency
+  - [ ] Parse `lightning-dictionary/data/wordFrequency.xlsx` (Tab "1 lemmas", column B) for word list
   - [ ] Create JSON structure for quick lookup
 - [ ] **1.3.2** Create data loader utility
-  - [ ] Build script to convert TXT to JSON
+  - [ ] Build script to convert xlsx to JSON
   - [ ] Optimize for memory efficiency
   - [ ] Add data validation
 
