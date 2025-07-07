@@ -48,29 +48,30 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
   - [x] Initial commit
 
 #### Step 1.3: Data Processing Setup
-- [ ] **1.3.1** Process dictionary data files
-  - [ ] Parse `lightning-dictionary/data/wordFrequency.xlsx` (Tab "1 lemmas", column B) for word list
-  - [ ] Create JSON structure for quick lookup
-- [ ] **1.3.2** Create data loader utility
-  - [ ] Build script to convert xlsx to JSON
-  - [ ] Optimize for memory efficiency
-  - [ ] Add data validation
+- [x] **1.3.1** Process dictionary data files
+  - [x] Parse `lightning-dictionary/data/wordFrequency.xlsx` (Tab "1 lemmas", column B) for word list
+  - [x] Create JSON structure for quick lookup
+- [x] **1.3.2** Create data loader utility
+  - [x] Build script to convert xlsx to JSON
+  - [x] Optimize for memory efficiency
+  - [x
+  ] Add data validation
 
 ### Week 3-4: Core Functionality Implementation
 
 #### Step 2.1: Hotkey System
-- [ ] **2.1.1** Implement global hotkey capture (Rust)
-  - [ ] Use `global-hotkey` crate
-  - [ ] Default: Ctrl+D (Windows/Linux), Cmd+D (macOS)
-  - [ ] Make configurable
-- [ ] **2.1.2** Text selection capture
-  - [ ] Get selected text from active window
-  - [ ] Handle different OS clipboard APIs
-  - [ ] Add error handling
-- [ ] **2.1.3** Hotkey testing
-  - [ ] Test in 10+ applications
-  - [ ] Document any conflicts
-  - [ ] Create fallback options
+- [x] **2.1.1** Implement global hotkey capture (Rust)
+  - [x] Use `global-hotkey` crate
+  - [x] Default: Alt+J (Windows/Linux(wayland-Fedora42)), Cmd+D (macOS)
+  - [x] Make configurable
+- [x] **2.1.2** Text selection capture
+  - [x] Get selected text from active window
+  - [x] Handle different OS clipboard APIs
+  - [x] Add error handling
+- [x] **2.1.3** Hotkey testing
+  - [x] Test in 10+ applications
+  - [x] Document any conflicts
+  - [x] Create fallback options
 
 #### Step 2.2: Memory Cache Implementation
 - [ ] **2.2.1** Design cache structure
@@ -241,7 +242,7 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 #### Decisions Made
 - **Tech Stack**: Tauri + React + TypeScript confirmed
 - **Cache Size**: 10,000 words in memory (approx 50MB)
-- **Hotkey**: Ctrl+D (customizable) as default
+- **Hotkey**: Alt+J (customizable) as default
 
 #### Blockers/Issues
 - Need to test hotkey conflicts with common applications
