@@ -61,7 +61,7 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 #### Step 2.1: Hotkey System
 - [ ] **2.1.1** Implement global hotkey capture (Rust)
   - [ ] Use `global-hotkey` crate
-  - [ ] Default: Ctrl+D (Windows/Linux), Cmd+D (macOS)
+  - [ ] Default: Alt+J (Windows/Linux), Cmd+D (macOS)
   - [ ] Make configurable
 - [ ] **2.1.2** Text selection capture
   - [ ] Get selected text from active window
@@ -241,7 +241,7 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 #### Decisions Made
 - **Tech Stack**: Tauri + React + TypeScript confirmed
 - **Cache Size**: 10,000 words in memory (approx 50MB)
-- **Hotkey**: Ctrl+D (customizable) as default
+- **Hotkey**: Alt+J (customizable) as default
 
 #### Blockers/Issues
 - Need to test hotkey conflicts with common applications
