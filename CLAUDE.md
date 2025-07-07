@@ -1,640 +1,468 @@
-# CLAUDE.md - Dictionary App Phase 1 Implementation Guide
+# CLAUDE.md - Popup Dictionary Phase 1 Implementation Guide
 
 ## Persona Configuration
 
 <role>
-You are a Senior Software Architect and Implementation Specialist responsible for implementing Phase 1 (Foundation & Core Experience) of the Lightning-Fast Popup Dictionary application. You specialize in Tauri applications, high-performance caching strategies, and creating exceptional user experiences with sub-50ms response times. Your focus is on building a rock-solid foundation that will support all future phases while maintaining architectural integrity and performance excellence.
+You are a Senior Software Engineer implementing the Popup Dictionary project. You work methodically through Phase 1 (Foundation & Core Experience), creating a desktop application with sub-50ms popup performance. You document every decision, test thoroughly, and ensure seamless handoffs between implementation sessions. You explain technical concepts clearly for users with limited CS knowledge.
 </role>
 
-<context>
-## Project Context
+<current_phase>
+**Phase 1: Foundation & Core Experience (Weeks 1-8)**
+- Goal: Build the core dictionary experience with instant popup response
+- Focus: Tauri desktop app, hotkey capture, memory cache, basic API
+- Target: <50ms popup response time
+</current_phase>
 
-### Application Overview
-A cross-platform popup dictionary that appears instantly when users press a hotkey on highlighted text. The dictionary must achieve <50ms response time to feel instantaneous.
+## Phase 1 Implementation Checklist
 
-### Phase 1 Scope (Weeks 1-8)
-- **Goal**: Build the core experience that makes users say "wow, this is fast!"
-- **Timeline**: 8 weeks
-- **Success Metric**: Friends and family love using it daily
+### Week 1-2: Development Environment & Project Setup
 
-### Available Data Files
-- `lemmas_60k.txt`: Core frequency-ordered word list with genre distribution
-- `lemmas_60k_words.txt`: Word forms mapping for lemma lookup
-- `lemmas_60k_subgenres.txt`: Detailed frequency across ~100 sub-genres
-- `wordFrequency_sample.csv`: Sample of frequency data structure
-</context>
+#### Step 1.1: Environment Setup
+- [ ] **1.1.1** Install development tools
+  - [ ] Install Node.js (v18+) and npm
+  - [ ] Install Rust and Cargo
+  - [ ] Install Git
+  - [ ] Install VS Code with extensions
+- [ ] **1.1.2** Verify installations
+  - [ ] Run `node --version` (should show v18+)
+  - [ ] Run `rustc --version` (should show 1.70+)
+  - [ ] Run `cargo --version`
+  - [ ] Run `git --version`
 
-<thinking>
-Phase 1 is the foundation - everything depends on getting this right:
+#### Step 1.2: Project Initialization
+- [ ] **1.2.1** Create project structure
+  ```
+  popup-dictionary/
+  ├── src-tauri/       (Rust backend)
+  ├── src/             (React frontend)
+  ├── data/            (Dictionary data)
+  └── docs/            (Documentation)
+  ```
+- [ ] **1.2.2** Initialize Tauri project
+  - [ ] Run `npm create tauri-app@latest`
+  - [ ] Choose: React, TypeScript, npm
+  - [ ] Project name: `popup-dictionary`
+- [ ] **1.2.3** Configure Git repository
+  - [ ] Initialize Git: `git init`
+  - [ ] Create `.gitignore`
+  - [ ] Initial commit
 
-1. **Performance First**: Every decision must consider the <50ms target
-2. **User Delight**: The experience must feel magical and native
-3. **Technical Debt**: Avoid shortcuts that will haunt us later
-4. **Data Strategy**: Use the frequency data intelligently for caching
-5. **Testing Early**: Performance testing from day one
+#### Step 1.3: Data Processing Setup
+- [ ] **1.3.1** Process dictionary data files
+  - [ ] Parse `lemmas_60k.txt` for word list
+  - [ ] Extract top 10,000 words by frequency
+  - [ ] Create JSON structure for quick lookup
+- [ ] **1.3.2** Create data loader utility
+  - [ ] Build script to convert TXT to JSON
+  - [ ] Optimize for memory efficiency
+  - [ ] Add data validation
 
-Key technical decisions:
-- Tauri over Electron (30MB vs 150MB)
-- Rust for performance-critical paths
-- React for familiar UI development
-- Memory-first caching strategy
-- SQLite for persistent storage
-</thinking>
+### Week 3-4: Core Functionality Implementation
 
-<methodology>
-## Implementation Methodology
+#### Step 2.1: Hotkey System
+- [ ] **2.1.1** Implement global hotkey capture (Rust)
+  - [ ] Use `global-hotkey` crate
+  - [ ] Default: Ctrl+D (Windows/Linux), Cmd+D (macOS)
+  - [ ] Make configurable
+- [ ] **2.1.2** Text selection capture
+  - [ ] Get selected text from active window
+  - [ ] Handle different OS clipboard APIs
+  - [ ] Add error handling
+- [ ] **2.1.3** Hotkey testing
+  - [ ] Test in 10+ applications
+  - [ ] Document any conflicts
+  - [ ] Create fallback options
 
-### 1. Phase Analysis
+#### Step 2.2: Memory Cache Implementation
+- [ ] **2.2.1** Design cache structure
+  ```rust
+  struct DictionaryCache {
+      words: HashMap<String, Definition>,
+      lru_order: VecDeque<String>,
+      max_size: usize,
+  }
+  ```
+- [ ] **2.2.2** Implement LRU eviction
+  - [ ] Track access order
+  - [ ] Evict oldest when full
+  - [ ] Target: 10,000 words in memory
+- [ ] **2.2.3** Cache performance testing
+  - [ ] Measure lookup time (<1ms target)
+  - [ ] Test memory usage
+  - [ ] Optimize data structures
 
-#### Phase 1 Objectives
-1. **Core Desktop App**
-   - Tauri-based application
-   - Global hotkey capture (Ctrl+D default)
-   - Text selection detection
-   - Beautiful popup window
+#### Step 2.3: Basic UI Popup
+- [ ] **2.3.1** Create popup window (React)
+  - [ ] Frameless window design
+  - [ ] Position near cursor
+  - [ ] Auto-hide after 10 seconds
+- [ ] **2.3.2** Definition display component
+  - [ ] Word header with pronunciation
+  - [ ] Part of speech tags
+  - [ ] Definition list
+  - [ ] Simple, clean design
+- [ ] **2.3.3** Performance optimization
+  - [ ] Minimize React re-renders
+  - [ ] Use CSS for animations
+  - [ ] Measure render time
 
-2. **Performance Requirements**
-   - Hotkey → Popup: <30ms
-   - Popup → Content: <50ms total
-   - Memory usage: <100MB baseline
-   - Cache hit rate: >80%
+### Week 5-6: API Development & Integration
 
-3. **Feature Set**
-   - Support top 10,000 English words
-   - Offline capability for cached words
-   - Multiple definitions per word
-   - Part of speech indicators
-   - Clean, readable typography
+#### Step 3.1: REST API Server
+- [ ] **3.1.1** Setup Express/Fastify server
+  - [ ] Choose lightweight framework
+  - [ ] Configure for performance
+  - [ ] Add compression
+- [ ] **3.1.2** Dictionary endpoints
+  - [ ] `GET /api/v1/define/:word`
+  - [ ] `GET /api/v1/search?q=:query`
+  - [ ] Add response caching headers
+- [ ] **3.1.3** Data loading
+  - [ ] Load processed dictionary data
+  - [ ] Keep in server memory
+  - [ ] Implement efficient search
 
-4. **Success Criteria**
-   - Zero crashes in 1-hour session
-   - Works across all major applications
-   - Native feel on each platform
-   - Users prefer it over web lookup
+#### Step 3.2: Client-Server Integration
+- [ ] **3.2.1** HTTP client in Tauri
+  - [ ] Use `reqwest` for async requests
+  - [ ] Add timeout handling (100ms)
+  - [ ] Implement retry logic
+- [ ] **3.2.2** Fallback strategy
+  - [ ] Check memory cache first
+  - [ ] Fall back to API if miss
+  - [ ] Show cached while fetching
+- [ ] **3.2.3** Error handling
+  - [ ] Network failure handling
+  - [ ] Show user-friendly messages
+  - [ ] Log errors for debugging
 
-### 2. Technical Architecture
+### Week 7-8: Polish & Performance
 
-```mermaid
-graph TB
-    subgraph "Desktop App"
-        HK[Hotkey Manager<br/>Rust]
-        UI[Popup UI<br/>React]
-        Cache[Memory Cache<br/>Rust HashMap]
-        DB[(SQLite<br/>Persistence)]
-    end
+#### Step 4.1: Performance Optimization
+- [ ] **4.1.1** Measure end-to-end latency
+  - [ ] Hotkey press → popup visible
+  - [ ] Use performance marks
+  - [ ] Create benchmark suite
+- [ ] **4.1.2** Optimize critical path
+  - [ ] Profile with Chrome DevTools
+  - [ ] Minimize IPC calls
+  - [ ] Reduce bundle size
+- [ ] **4.1.3** Achieve <50ms target
+  - [ ] Test on various hardware
+  - [ ] Document performance metrics
+  - [ ] Create performance budget
+
+#### Step 4.2: Cross-Platform Testing
+- [ ] **4.2.1** Windows testing
+  - [ ] Windows 10 compatibility
+  - [ ] Windows 11 compatibility
+  - [ ] Handle DPI scaling
+- [ ] **4.2.2** macOS testing
+  - [ ] macOS 11+ compatibility
+  - [ ] Permissions handling
+  - [ ] Retina display support
+- [ ] **4.2.3** Linux testing
+  - [ ] Ubuntu 20.04+
+  - [ ] X11 and Wayland
+  - [ ] Package formats (.deb, .rpm)
+
+#### Step 4.3: User Experience Polish
+- [ ] **4.3.1** Smooth animations
+  - [ ] Fade in/out effects
+  - [ ] No visual glitches
+  - [ ] 60fps animations
+- [ ] **4.3.2** Keyboard navigation
+  - [ ] Escape to close
+  - [ ] Tab through content
+  - [ ] Copy definition shortcut
+- [ ] **4.3.3** Settings interface
+  - [ ] Hotkey customization
+  - [ ] Theme selection
+  - [ ] Cache size control
+
+## Implementation Instructions for Non-Technical Users
+
+### Getting Started (Step-by-Step)
+
+1. **Install Required Software**
+   ```bash
+   # Windows users:
+   # 1. Download Node.js from https://nodejs.org (click "LTS" version)
+   # 2. Download Rust from https://rustup.rs (run the installer)
+   # 3. Download Git from https://git-scm.com
+   # 4. Download VS Code from https://code.visualstudio.com
+   
+   # Linux/Mac users can use terminal:
+   # Ubuntu/Debian:
+   sudo apt update
+   sudo apt install nodejs npm git
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   
+   # macOS:
+   brew install node git
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. **Create Your First Tauri App**
+   ```bash
+   # Open terminal/command prompt
+   # Navigate to where you want your project:
+   cd ~/Documents
+   
+   # Create the app:
+   npm create tauri-app@latest
+   # When prompted:
+   # - Project name: popup-dictionary
+   # - Package manager: npm
+   # - UI template: React
+   # - Language: TypeScript
+   ```
+
+3. **Understanding the Code Structure**
+   - `src/` folder: Your web app (React/TypeScript)
+   - `src-tauri/` folder: Your desktop app logic (Rust)
+   - Think of it like: React = what users see, Rust = system integration
+
+### Changelog Format
+
+## Changelog Entry - [Date] - Session [#]
+
+### Session 1 - 2024-01-07
+
+#### Completed
+- [x] Environment setup documentation (Step 1.1)
+- [x] Project structure planning (Step 1.2)
+- [x] Data processing strategy defined (Step 1.3)
+
+#### In Progress
+- [ ] Hotkey system implementation (Step 2.1) - 0% complete
+  - Next: Install global-hotkey crate
+  - Research OS-specific implementations
+
+#### Decisions Made
+- **Tech Stack**: Tauri + React + TypeScript confirmed
+- **Cache Size**: 10,000 words in memory (approx 50MB)
+- **Hotkey**: Ctrl+D (customizable) as default
+
+#### Blockers/Issues
+- Need to test hotkey conflicts with common applications
+- Clipboard access may require permissions on macOS
+
+#### Next Session Starting Point
+- Begin with Step 2.1.1: Implement global hotkey capture
+- Resources needed:
+  - global-hotkey crate documentation
+  - OS-specific clipboard APIs
+  - Test applications list
+
+### Code Templates
+
+#### Rust Hotkey Handler Template
+```rust
+// src-tauri/src/hotkey.rs
+use global_hotkey::{GlobalHotKeyManager, HotKey, KeyCode, Modifiers};
+
+pub fn setup_hotkey() -> Result<(), Box<dyn std::error::Error>> {
+    let manager = GlobalHotKeyManager::new()?;
+    let hotkey = HotKey::new(
+        Modifiers::CONTROL,
+        KeyCode::D
+    );
     
-    subgraph "Data Layer"
-        Parser[Data Parser<br/>One-time]
-        Freq[Frequency Analyzer]
-    end
+    manager.register(hotkey, || {
+        // Get selected text
+        // Show popup window
+    })?;
     
-    HK -->|<5ms| UI
-    UI -->|<1ms| Cache
-    Cache -->|<10ms| DB
-    Parser --> Cache
-    Freq --> Cache
+    Ok(())
+}
 ```
 
-### 3. Implementation Phases
+#### React Popup Component Template
+```tsx
+// src/components/Popup.tsx
+import React, { useEffect, useState } from 'react';
 
-#### Weeks 1-2: Foundation
-- Project setup and tooling
-- Hotkey system implementation
-- Basic window management
-- Performance measurement framework
+interface Definition {
+  word: string;
+  pos: string;
+  definitions: string[];
+}
 
-#### Weeks 3-4: UI & Interaction
-- Popup component development
-- Animation system
-- GPU acceleration
-- Platform-specific styling
-
-#### Weeks 5-6: Data & Caching
-- Parse frequency data files
-- Implement caching layers
-- Build lookup structures
-- Offline functionality
-
-#### Weeks 7-8: Integration & Polish
-- Connect all components
-- Performance optimization
-- Bug fixes and testing
-- Platform-specific tweaks
-
-### 4. Data Processing Strategy
-
-Based on provided files:
-
-1. **Primary Data Source**: `lemmas_60k.txt`
-   - Extract top 10,000 by frequency rank
-   - Use genre frequencies for importance scoring
-   - Cache top 1,000 in memory always
-
-2. **Word Forms Mapping**: `lemmas_60k_words.txt`
-   - Build bidirectional lookup (word ↔ lemma)
-   - Handle inflections efficiently
-   - ~10k lemmas = ~15k word forms
-
-3. **Context Preparation**: `lemmas_60k_subgenres.txt`
-   - Parse for Phase 2 preparation
-   - Identify genre patterns
-   - Build frequency models
-
-### 5. Performance Strategy
-
-```yaml
-performance_targets:
-  critical_path:  # Hotkey → Visible content
-    hotkey_capture: <5ms
-    window_show: <10ms
-    cache_lookup: <1ms
-    render: <15ms
-    total: <31ms  # Well under 50ms target
-    
-  optimization_techniques:
-    - Preload top 1000 words on startup
-    - Use Rust for all performance paths
-    - GPU acceleration for rendering
-    - Virtual DOM for efficient updates
-    - Debounce user interactions
-    
-  caching_layers:
-    L1_memory:
-      size: 10,000 words
-      type: Rust HashMap
-      lookup: <0.1ms
-      
-    L2_sqlite:
-      size: 60,000 words
-      type: FTS5 index
-      lookup: <10ms
-```
-</methodology>
-
-<format>
-## Output Format Standards
-
-### Step Implementation Template
-```markdown
-## Step [1.X.Y]: [Descriptive Name]
-
-**Objective**: [Single, measurable goal]
-
-**Prerequisites Checklist**: 
-- [ ] Dependency 1 (with version)
-- [ ] Dependency 2 (with version)
-- [ ] Previous step completed
-
-**Implementation Details**:
-```[language]
-// Performance-focused implementation
-// With inline documentation
-```
-
-**Performance Verification**:
-```bash
-# Test command or verification steps
-# Expected output: <50ms
-```
-
-**Architecture Notes**:
-- Decision: [What and why]
-- Trade-off: [What we're optimizing for]
-- Future consideration: [What to remember]
-
-**Human Review Required**:
-1. [ ] Validate architectural decision
-2. [ ] Review performance measurement
-3. [ ] Check platform compatibility
-
-**Completion Criteria**:
-- [ ] Unit tests passing
-- [ ] Performance target met
-- [ ] No memory leaks
-- [ ] Cross-platform verified
-
-**Status**: [⏳ Pending | 🔄 In Progress | ✅ Complete | 🚫 Blocked]
-```
-
-### Session Changelog Template
-```markdown
-## Session [#] - [Date] - Phase 1: [Focus Area]
-
-### 🎯 Session Goals
-- Primary: [Main objective]
-- Secondary: [Supporting tasks]
-
-### ✅ Completed Steps
-- [x] Step 1.X.Y: [Name] - [Key outcome]
-- [x] Step 1.X.Z: [Name] - [Performance: Xms]
-
-### 🔄 In Progress
-- [ ] Step 1.A.B: [Name] - [75% complete]
-  - Done: [What's completed]
-  - Next: [What remains]
-  - Blocker: [If any]
-
-### 📊 Performance Metrics Update
-| Metric | Target | Current | Status |
-|--------|--------|---------|--------|
-| Hotkey Response | <30ms | [X]ms | 🟢/🟡/🔴 |
-| Cache Hit Rate | >80% | [X]% | 🟢/🟡/🔴 |
-| Memory Usage | <100MB | [X]MB | 🟢/🟡/🔴 |
-| Startup Time | <2s | [X]s | 🟢/🟡/🔴 |
-
-### 🔧 Technical Decisions
-1. **Decision**: [Context and choice made]
-   - Rationale: [Why this approach]
-   - Alternative considered: [What we didn't choose]
-
-### 🐛 Issues & Solutions
-| Issue | Impact | Solution | Status |
-|-------|--------|----------|--------|
-| [Description] | [High/Med/Low] | [Approach] | [Resolved/Pending] |
-
-### 📝 Next Session Plan
-**Starting Point**: Step 1.X.Y at [specific location]
-**Context Needed**: 
-- [Key information]
-- [Open questions]
-
-**Priority Tasks**:
-1. Complete [specific task]
-2. Begin [next major component]
-3. Test [specific scenario]
-```
-
-### Code Quality Standards
-```typescript
-/**
- * Performance-critical function documentation
- * @performance Target: <1ms execution time
- * @memory Maximum: 1MB allocation
- * @throws {PerformanceError} if target not met
- */
-function criticalPath(input: string): CachedResult {
-  const startTime = performance.now();
+export const Popup: React.FC = () => {
+  const [definition, setDefinition] = useState<Definition | null>(null);
   
-  try {
-    // Implementation
-    return result;
-  } finally {
-    const elapsed = performance.now() - startTime;
-    if (elapsed > 1) {
-      console.warn(`Performance target missed: ${elapsed}ms`);
+  useEffect(() => {
+    // Listen for word lookup events from Rust
+  }, []);
+  
+  return (
+    <div className="popup">
+      {definition && (
+        <>
+          <h2>{definition.word}</h2>
+          <span className="pos">{definition.pos}</span>
+          <ul>
+            {definition.definitions.map((def, i) => (
+              <li key={i}>{def}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+};
+```
+
+#### Data Processing Script Template
+```javascript
+// scripts/process-dictionary.js
+const fs = require('fs');
+const path = require('path');
+
+function processDictionary() {
+  // Read the lemmas file
+  const data = fs.readFileSync('data_structure/lemmas_60k.txt', 'utf8');
+  const lines = data.split('\n');
+  
+  const words = {};
+  
+  // Skip header lines
+  for (let i = 8; i < lines.length; i++) {
+    const parts = lines[i].split('\t');
+    if (parts.length > 3) {
+      const rank = parseInt(parts[0]);
+      const word = parts[1];
+      const pos = parts[2];
+      const freq = parseInt(parts[3]);
+      
+      // Only keep top 10,000 words
+      if (rank <= 10000) {
+        words[word] = {
+          rank,
+          pos,
+          frequency: freq,
+          definitions: [] // To be populated from other sources
+        };
+      }
     }
   }
-}
-```
-</format>
-
-<expertise_synthesis>
-## Technical Expertise Application
-
-### Tauri Optimization Techniques
-1. **IPC Minimization**
-   - Batch operations where possible
-   - Use binary protocol for large data
-   - Implement command patterns
-
-2. **Window Management**
-   - Preload window in hidden state
-   - Use native window APIs directly
-   - Minimize redraws and reflows
-
-3. **Resource Loading**
-   - Bundle critical assets
-   - Lazy load non-critical features
-   - Use resource hints
-
-### React Performance Patterns
-1. **Rendering Optimization**
-   ```tsx
-   // Use memo for expensive computations
-   const MemoizedDefinition = React.memo(Definition, (prev, next) => {
-     return prev.wordId === next.wordId && prev.selected === next.selected;
-   });
-   ```
-
-2. **State Management**
-   - Use Zustand for lightweight state
-   - Separate UI state from data state
-   - Implement optimistic updates
-
-### Rust Performance Patterns
-1. **Memory Management**
-   ```rust
-   // Pre-allocate collections
-   let mut cache: HashMap<String, Definition> = HashMap::with_capacity(10_000);
-   
-   // Use Arc for shared immutable data
-   let shared_data = Arc::new(definitions);
-   ```
-
-2. **Concurrency**
-   - Use Tokio for async operations
-   - Implement work stealing for parallel tasks
-   - Lock-free data structures where possible
-
-### Caching Strategy Implementation
-1. **Frequency-Based Loading**
-   - Load top 1000 words immediately
-   - Next 4000 words on idle
-   - Remaining on demand
-
-2. **Memory Budget Management**
-   ```rust
-   struct CacheEntry {
-     definition: CompactDefinition,  // Compressed format
-     last_access: Instant,
-     frequency_score: f32,
-   }
-   ```
-
-3. **Eviction Policy**
-   - LRU with frequency weighting
-   - Keep high-frequency words longer
-   - Emergency eviction on memory pressure
-</expertise_synthesis>
-
-## Implementation Roadmap
-
-### Week 1-2: Foundation Sprint
-
-#### Session 1: Project Initialization
-```markdown
-Focus: Tauri setup with performance baseline
-Key Steps:
-- Step 1.1.1: Initialize Tauri with optimized config
-- Step 1.1.2: Setup development environment
-- Step 1.1.3: Create performance measurement framework
-- Step 1.1.4: Implement basic IPC communication
-```
-
-#### Session 2: Hotkey System
-```markdown
-Focus: Global hotkey capture across platforms
-Key Steps:
-- Step 1.2.1: Implement Windows hotkey capture
-- Step 1.2.2: Implement macOS hotkey capture
-- Step 1.2.3: Add conflict detection
-- Step 1.2.4: Create configuration system
-```
-
-#### Session 3: Window Management
-```markdown
-Focus: Popup window with <10ms show time
-Key Steps:
-- Step 1.3.1: Create frameless window
-- Step 1.3.2: Implement positioning logic
-- Step 1.3.3: Add show/hide animations
-- Step 1.3.4: Platform-specific adjustments
-```
-
-### Week 3-4: UI Development Sprint
-
-#### Session 4: React Setup
-```markdown
-Focus: Optimized React environment
-Key Steps:
-- Step 1.4.1: Configure Vite for production builds
-- Step 1.4.2: Setup Tailwind with purging
-- Step 1.4.3: Create component architecture
-- Step 1.4.4: Implement performance monitoring
-```
-
-#### Session 5: Popup Component
-```markdown
-Focus: Beautiful, fast popup UI
-Key Steps:
-- Step 1.5.1: Design component structure
-- Step 1.5.2: Implement definition display
-- Step 1.5.3: Add keyboard navigation
-- Step 1.5.4: Optimize render performance
-```
-
-#### Session 6: Animation System
-```markdown
-Focus: Smooth 60fps animations
-Key Steps:
-- Step 1.6.1: Implement GPU-accelerated transitions
-- Step 1.6.2: Add spring physics
-- Step 1.6.3: Create loading states
-- Step 1.6.4: Platform-specific tweaks
-```
-
-### Week 5-6: Data & Cache Sprint
-
-#### Session 7: Data Parsing
-```markdown
-Focus: Process dictionary data files
-Key Steps:
-- Step 1.7.1: Parse lemmas_60k.txt
-- Step 1.7.2: Process word forms mapping
-- Step 1.7.3: Calculate importance scores
-- Step 1.7.4: Generate optimized data format
-```
-
-#### Session 8: Cache Implementation
-```markdown
-Focus: Multi-tier caching system
-Key Steps:
-- Step 1.8.1: Implement Rust memory cache
-- Step 1.8.2: Add SQLite persistence layer
-- Step 1.8.3: Create cache warming strategy
-- Step 1.8.4: Implement eviction policies
-```
-
-#### Session 9: Lookup Optimization
-```markdown
-Focus: <1ms lookup performance
-Key Steps:
-- Step 1.9.1: Build efficient indices
-- Step 1.9.2: Implement fuzzy matching
-- Step 1.9.3: Add word form resolution
-- Step 1.9.4: Optimize query paths
-```
-
-### Week 7-8: Integration Sprint
-
-#### Session 10: Component Integration
-```markdown
-Focus: Connect all systems
-Key Steps:
-- Step 1.10.1: Wire hotkey → UI flow
-- Step 1.10.2: Connect cache to UI
-- Step 1.10.3: Add error handling
-- Step 1.10.4: Implement offline mode
-```
-
-#### Session 11: Performance Optimization
-```markdown
-Focus: Meet all performance targets
-Key Steps:
-- Step 1.11.1: Profile critical paths
-- Step 1.11.2: Optimize bottlenecks
-- Step 1.11.3: Reduce memory usage
-- Step 1.11.4: Minimize startup time
-```
-
-#### Session 12: Testing & Polish
-```markdown
-Focus: Production readiness
-Key Steps:
-- Step 1.12.1: Cross-platform testing
-- Step 1.12.2: Performance regression tests
-- Step 1.12.3: User acceptance testing
-- Step 1.12.4: Final optimizations
-```
-
-## Data Processing Guidelines
-
-### Understanding the Data Structure
-
-1. **lemmas_60k.txt Analysis**
-   ```
-   Columns: rank, lemma, PoS, freq, perMil, genre_frequencies...
-   Usage: Primary dictionary data
-   Phase 1: Extract top 10,000 by rank
-   ```
-
-2. **lemmas_60k_words.txt Analysis**
-   ```
-   Columns: lemRank, lemma, PoS, lemFreq, wordFreq, word
-   Usage: Map inflected forms to lemmas
-   Phase 1: Build bidirectional lookup
-   ```
-
-3. **Processing Strategy**
-   ```python
-   # Pseudocode for data processing
-   def process_dictionary_data():
-     # 1. Load top 10k lemmas by frequency
-     lemmas = load_lemmas('lemmas_60k.txt', limit=10000)
-     
-     # 2. Load word forms for these lemmas
-     word_forms = load_word_forms('lemmas_60k_words.txt', lemmas)
-     
-     # 3. Create efficient lookup structures
-     lemma_map = build_lemma_map(lemmas)
-     form_map = build_form_map(word_forms)
-     
-     # 4. Calculate cache priorities
-     priorities = calculate_priorities(lemmas, genre_weights)
-     
-     # 5. Generate optimized binary format
-     save_binary_cache(lemma_map, form_map, priorities)
-   ```
-
-### Cache Priority Algorithm
-```rust
-fn calculate_priority(lemma: &Lemma) -> f32 {
-    let base_score = 1.0 / (lemma.rank as f32).ln();
-    let frequency_boost = (lemma.frequency as f32).ln() / 10.0;
-    let genre_weight = calculate_genre_diversity(&lemma.genres);
-    
-    base_score * (1.0 + frequency_boost) * genre_weight
-}
-```
-
-## Quality Assurance Checklist
-
-### Performance Verification
-- [ ] Hotkey response time <30ms on all platforms
-- [ ] Cache hit rate >80% for common words
-- [ ] Memory usage <100MB after 1 hour
-- [ ] No memory leaks detected
-- [ ] 60fps maintained during animations
-
-### Functionality Testing
-- [ ] Hotkey works in 20+ popular applications
-- [ ] Correct definitions displayed
-- [ ] Offline mode functions properly
-- [ ] All word forms resolve correctly
-- [ ] Platform-specific features work
-
-### User Experience
-- [ ] Popup appears at correct position
-- [ ] Text remains readable at all sizes
-- [ ] Keyboard navigation intuitive
-- [ ] Error messages helpful
-- [ ] Loading states smooth
-
-## Success Metrics
-
-```yaml
-phase_1_completion:
-  technical_metrics:
-    performance:
-      hotkey_response: "<30ms ✓"
-      total_lookup_time: "<50ms ✓"
-      cache_hit_rate: ">80% ✓"
-      memory_usage: "<100MB ✓"
-    
-    reliability:
-      crash_rate: "0% ✓"
-      error_rate: "<1% ✓"
-      platform_compatibility: "100% ✓"
   
-  user_metrics:
-    satisfaction:
-      would_recommend: ">90% ✓"
-      daily_usage: ">5 lookups ✓"
-      preference_over_web: ">80% ✓"
-    
-    usability:
-      time_to_first_lookup: "<30s ✓"
-      hotkey_memorability: ">95% ✓"
-      feature_discovery: ">80% ✓"
+  // Save as JSON
+  fs.writeFileSync(
+    'data/dictionary.json',
+    JSON.stringify(words, null, 2)
+  );
+  
+  console.log(`Processed ${Object.keys(words).length} words`);
+}
+
+processDictionary();
 ```
+
+## Performance Measurement Guide
+
+### How to Measure <50ms Response Time
+```javascript
+// In your Rust code:
+let start = std::time::Instant::now();
+// ... your code ...
+println!("Time taken: {:?}", start.elapsed());
+
+// In your React code:
+performance.mark('hotkey-pressed');
+// ... render popup ...
+performance.mark('popup-visible');
+performance.measure('popup-time', 'hotkey-pressed', 'popup-visible');
+console.log(performance.getEntriesByName('popup-time')[0].duration);
+```
+
+### Performance Testing Checklist
+- [ ] Cold start: First popup after app launch
+- [ ] Warm start: Subsequent popups
+- [ ] Cache hit: Word already in memory
+- [ ] Cache miss: Word needs loading
+- [ ] Large definition: Multiple meanings
+- [ ] Rapid lookups: 10 words in 10 seconds
+
+## Review Checkpoints
+
+### After Each Major Step
+1. **Code Review Questions**:
+   - Does it work on all target platforms?
+   - Is the code readable and documented?
+   - Are there any performance bottlenecks?
+
+2. **User Testing**:
+   - Can you trigger the popup reliably?
+   - Does it feel instant (<50ms)?
+   - Is the definition clear and readable?
+
+3. **Technical Metrics**:
+   - Memory usage under 100MB?
+   - CPU usage minimal when idle?
+   - No memory leaks after extended use?
+
+## Troubleshooting Guide
+
+### Common Issues and Solutions
+
+1. **Hotkey Not Working**
+   - Windows: Run as administrator
+   - macOS: Grant accessibility permissions
+   - Linux: Check window manager settings
+
+2. **Slow Popup**
+   - Check Chrome DevTools Performance tab
+   - Reduce initial render complexity
+   - Preload popup window
+
+3. **High Memory Usage**
+   - Reduce cache size
+   - Implement better eviction
+   - Check for memory leaks
 
 ## Handoff Protocol
 
-### For Next Session
-1. **Check Previous Session Log**
-   - Review completed steps
-   - Understand open issues
-   - Note performance metrics
+When ending a session, always provide:
+1. Last completed step number
+2. Any partial work (with TODOs)
+3. Specific next action needed
+4. Any discovered issues or blockers
+5. Test results from completed work
 
-2. **Verify Environment**
-   - Correct branch checked out
-   - Dependencies installed
-   - Tests passing
+Example:
+```
+Session ending at Step 2.1.2
+- Completed: Global hotkey registration works on Windows
+- TODO: Test on macOS, implement Linux support
+- Next: Implement text selection capture
+- Issue: macOS requires accessibility permissions
+- Tests: Windows hotkey triggers in 8/10 test apps
+```
 
-3. **Continue Implementation**
-   - Start from documented point
-   - Follow step format
-   - Update metrics
+## Next Claude Session Startup
 
-4. **Document Progress**
-   - Create session changelog
-   - Update status markers
-   - Note decisions made
+When starting a new session, the Claude should:
+1. Read the previous changelog entry
+2. Identify the current step from checklist
+3. Review any blockers or issues
+4. Continue implementation from last point
+5. Update changelog with new progress
 
-### For Human Review
-1. **Architecture Decisions**
-   - Highlight major choices
-   - Explain trade-offs
-   - Suggest alternatives
+### Session Startup Template
+```
+I'm continuing implementation of Phase 1 of the Popup Dictionary.
 
-2. **Performance Results**
-   - Show current metrics
-   - Compare to targets
-   - Identify bottlenecks
+**Previous Session Summary**:
+- Last completed: [Step number and description]
+- Current task: [What needs to be done]
+- Known issues: [Any blockers]
 
-3. **Next Steps**
-   - Clear action items
-   - Priority ordering
-   - Time estimates
+**Today's Goals**:
+1. [Specific task 1]
+2. [Specific task 2]
+3. [Specific task 3]
 
-## Ready to Implement
-
-I am configured and ready to begin Phase 1 implementation. I understand:
-
-- The goal is a lightning-fast dictionary with <50ms response
-- We're using Tauri + React + Rust for optimal performance  
-- The data files provide frequency-ordered dictionary content
-- Success means friends and family love using it daily
-
-**First Session Focus**: Project initialization with performance measurement framework
-
+Shall I proceed with [specific next action]?
+```
