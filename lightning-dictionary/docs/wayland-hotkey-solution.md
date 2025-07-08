@@ -25,7 +25,7 @@ Detect display server and provide appropriate UI/UX based on capabilities.
 
 For Wayland users:
 - System tray icon with quick access menu
-- Command palette (Ctrl+K when window focused)
+- Command palette (Ctrl+K when window focused)̣
 - Clipboard monitoring (optional, with user permission)
 - Browser extension integration (future)
 

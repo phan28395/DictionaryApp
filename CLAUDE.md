@@ -74,7 +74,7 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
   - [x] Create fallback options
 
 #### Step 2.2: Memory Cache Implementation
-- [ ] **2.2.1** Design cache structure
+- [x] **2.2.1** Design cache structure
   ```rust
   struct DictionaryCache {
       words: HashMap<String, Definition>,
@@ -82,14 +82,14 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
       max_size: usize,
   }
   ```
-- [ ] **2.2.2** Implement LRU eviction
-  - [ ] Track access order
-  - [ ] Evict oldest when full
-  - [ ] Target: 10,000 words in memory
-- [ ] **2.2.3** Cache performance testing
-  - [ ] Measure lookup time (<1ms target)
-  - [ ] Test memory usage
-  - [ ] Optimize data structures
+- [x] **2.2.2** Implement LRU eviction
+  - [x] Track access order
+  - [x] Evict oldest when full
+  - [x] Target: 10,000 words in memory
+- [x] **2.2.3** Cache performance testing
+  - [x] Measure lookup time (<1ms target)
+  - [x] Test memory usage
+  - [x] Optimize data structures
 
 #### Step 2.3: Basic UI Popup
 - [ ] **2.3.1** Create popup window (React)

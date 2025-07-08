@@ -2,6 +2,8 @@ use tauri::{AppHandle, Manager, Runtime, Emitter};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use arboard::Clipboard;
 use std::sync::{Arc, Mutex};
+use crate::cache::ThreadSafeCache;
+use serde_json;
 
 pub struct HotkeyManager {
     _is_wayland: bool,
@@ -9,11 +11,11 @@ pub struct HotkeyManager {
 }
 
 impl HotkeyManager {
-    pub fn setup<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn setup<R: Runtime>(app: &tauri::App<R>, cache: ThreadSafeCache) -> Result<(), Box<dyn std::error::Error>> {
         let app_handle = app.handle().clone();
         
         // Try to register global shortcuts using the official plugin
-        match register_shortcuts(&app_handle) {
+        match register_shortcuts(&app_handle, cache.clone()) {
             Ok(_) => {
                 println!("✓ Global shortcuts registered successfully");
                 if std::env::var("XDG_SESSION_TYPE").unwrap_or_default() == "wayland" {
@@ -23,7 +25,7 @@ impl HotkeyManager {
                     
                     // Start clipboard monitoring as fallback
                     if let Ok(monitor) = ClipboardMonitor::new() {
-                        monitor.start_monitoring(app_handle.clone());
+                        monitor.start_monitoring(app_handle.clone(), cache.clone());
                         println!("✓ Started clipboard monitoring for Wayland");
                     }
                 }
@@ -35,7 +37,7 @@ impl HotkeyManager {
                 
                 // Start clipboard monitoring as fallback
                 if let Ok(monitor) = ClipboardMonitor::new() {
-                    monitor.start_monitoring(app_handle.clone());
+                    monitor.start_monitoring(app_handle.clone(), cache.clone());
                     println!("✓ Started clipboard monitoring as fallback");
                 }
             }
@@ -45,22 +47,24 @@ impl HotkeyManager {
     }
 }
 
-fn register_shortcuts<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std::error::Error>> {
+fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) -> Result<(), Box<dyn std::error::Error>> {
     // Register Alt+J
     let shortcut1 = Shortcut::new(Some(Modifiers::ALT), Code::KeyJ);
+    let cache1 = cache.clone();
     app.global_shortcut().on_shortcut(shortcut1.clone(), move |app, _shortcut, event| {
         if event.state == ShortcutState::Pressed {
             println!("Alt+J pressed!");
-            handle_hotkey_press(app);
+            handle_hotkey_press(app, cache1.clone());
         }
     })?;
     
     // Register Ctrl+Shift+D as fallback
     let shortcut2 = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyD);
+    let cache2 = cache.clone();
     app.global_shortcut().on_shortcut(shortcut2.clone(), move |app, _shortcut, event| {
         if event.state == ShortcutState::Pressed {
             println!("Ctrl+Shift+D pressed!");
-            handle_hotkey_press(app);
+            handle_hotkey_press(app, cache2.clone());
         }
     })?;
     
@@ -69,12 +73,8 @@ fn register_shortcuts<R: Runtime>(app: &AppHandle<R>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>) {
-    // First emit a test event
-    println!("Hotkey pressed! Sending test word 'hello'");
-    if let Err(e) = app.emit("lookup-word", "hello") {
-        println!("Error emitting test event: {}", e);
-    }
+fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) {
+    let start_time = std::time::Instant::now();
     
     // Show the window
     if let Some(window) = app.get_webview_window("main") {
@@ -88,10 +88,40 @@ fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>) {
     match get_selected_text() {
         Ok(text) if !text.is_empty() => {
             println!("Selected text: {}", text);
-            let _ = app.emit("lookup-word", text);
+            
+            // Check cache first
+            let mut cache_guard = cache.lock().unwrap();
+            if let Some(definition) = cache_guard.get(&text) {
+                let lookup_time = start_time.elapsed();
+                println!("Cache hit! Lookup time: {:?}", lookup_time);
+                
+                // Emit definition with timing info
+                let _ = app.emit("word-definition", serde_json::json!({
+                    "word": text,
+                    "definition": definition,
+                    "from_cache": true,
+                    "lookup_time_ms": lookup_time.as_millis()
+                }));
+            } else {
+                println!("Cache miss for word: {}", text);
+                // For now, emit that we need to fetch from API
+                let _ = app.emit("word-definition", serde_json::json!({
+                    "word": text,
+                    "definition": null,
+                    "from_cache": false,
+                    "lookup_time_ms": start_time.elapsed().as_millis()
+                }));
+            }
         }
-        Ok(_) => println!("No text selected"),
-        Err(e) => println!("Error getting selected text: {}", e),
+        Ok(_) => {
+            println!("No text selected");
+            // Send empty selection event
+            let _ = app.emit("no-selection", ());
+        }
+        Err(e) => {
+            println!("Error getting selected text: {}", e);
+            let _ = app.emit("selection-error", e.to_string());
+        }
     }
 }
 
@@ -138,7 +168,7 @@ impl ClipboardMonitor {
         })
     }
     
-    pub fn start_monitoring<R: Runtime>(&self, app_handle: AppHandle<R>) {
+    pub fn start_monitoring<R: Runtime>(&self, app_handle: AppHandle<R>, cache: ThreadSafeCache) {
         let clipboard = self.clipboard.clone();
         let last_content = self.last_content.clone();
         
@@ -166,7 +196,20 @@ impl ClipboardMonitor {
                             
                             if is_single_word(&current) {
                                 println!("Valid word detected: {}", current);
-                                let _ = app_handle.emit("clipboard-word", current.clone());
+                                
+                                // Check cache
+                                let mut cache_guard = cache.lock().unwrap();
+                                if let Some(definition) = cache_guard.get(&current) {
+                                    println!("Cache hit for clipboard word!");
+                                    let _ = app_handle.emit("clipboard-definition", serde_json::json!({
+                                        "word": current,
+                                        "definition": definition,
+                                        "from_cache": true
+                                    }));
+                                } else {
+                                    println!("Cache miss for clipboard word: {}", current);
+                                    let _ = app_handle.emit("clipboard-word", current.clone());
+                                }
                             } else {
                                 println!("Not a single word, ignoring");
                             }
