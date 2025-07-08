@@ -54,8 +54,7 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
 - [x] **1.3.2** Create data loader utility
   - [x] Build script to convert xlsx to JSON
   - [x] Optimize for memory efficiency
-  - [x
-  ] Add data validation
+  - [x] Add data validation
 
 ### Week 3-4: Core Functionality Implementation
 
