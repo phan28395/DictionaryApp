@@ -89,7 +89,7 @@
       "planned_duration": "8 weeks",
       "total_steps": 15,
       "estimated_hours": 61,
-      "current_step": "2.1",
+      "current_step": "2.3",
       "dependencies": ["phase1"],
       "planned_features": [
         "Multi-definition display with POS",
@@ -136,6 +136,40 @@
           ],
           "test_results": "Performance test created, manual testing successful",
           "notes": "Mock data shows 3 definitions for 'example', 5 for 'run'. Ready for integration with real data."
+        },
+        "2.2": {
+          "name": "Clickable Cross-References",
+          "status": "completed",
+          "duration": "3 hours",
+          "completion_date": "2025-01-08",
+          "files_created": [
+            "src/utils/wordParser.ts",
+            "src/hooks/useWordNavigation.ts",
+            "src/components/CrossReference.tsx",
+            "src/components/CrossReference.css",
+            "src/components/NavigationControls.tsx",
+            "src/components/NavigationControls.css",
+            "test-cross-references.mjs"
+          ],
+          "files_modified": [
+            "src/components/MultiDefinition.tsx",
+            "src/components/EnhancedPopup.tsx",
+            "api/src/services/dictionary.ts",
+            "api/src/routes/index.ts"
+          ],
+          "features_implemented": [
+            "Word parsing utility with regex patterns",
+            "Navigation history hook with back/forward",
+            "CrossReference component for clickable words",
+            "Navigation controls with keyboard shortcuts",
+            "Circular reference detection API",
+            "Word exclusion for current word variations",
+            "Alt+Left/Right keyboard navigation",
+            "Visual breadcrumb navigation"
+          ],
+          "test_results": "Parser tests passed, navigation working",
+          "performance_impact": "None - still <50ms",
+          "notes": "Cross-references working in definitions, examples, and usage. Circular reference detection available via API."
         }
       }
     },
@@ -188,8 +222,8 @@
       ]
     }
   },
-  "current_focus": "phase2_step_2.1_completed",
-  "last_update": "2025-01-09T13:05:00Z",
-  "total_progress": "17.33%",
-  "next_recommended_action": "IMPLEMENT 2.2"
+  "current_focus": "phase2_step_2.2_completed",
+  "last_update": "2025-01-08T23:40:00Z",
+  "total_progress": "18.67%",
+  "next_recommended_action": "IMPLEMENT 2.3"
 }

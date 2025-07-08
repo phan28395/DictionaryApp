@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getDefinition, searchWords, getDictionaryStats, getEnhancedDefinition, getMultipleDefinitions } from '../services/dictionary';
+import { getDefinition, searchWords, getDictionaryStats, getEnhancedDefinition, getMultipleDefinitions, detectCircularReferences } from '../services/dictionary';
 import { ApiResponse, WordDefinition, SearchResult } from '../types/dictionary';
 import { MultiDefinitionResponse, EnhancedWordDefinition } from '../types/enhanced-dictionary';
 import { config } from '../config';
@@ -183,6 +183,37 @@ export async function defineRoutes(server: FastifyInstance) {
       data: definitions,
       requested: limitedWords.length,
       found: Object.keys(definitions).length,
+      timestamp: Date.now(),
+    };
+  });
+
+  // Check circular references
+  server.get<{
+    Params: { word: string };
+    Querystring: { maxDepth?: string };
+  }>('/api/v1/circular-check/:word', async (request, reply) => {
+    const { word } = request.params;
+    const maxDepth = parseInt(request.query.maxDepth || '5', 10);
+    
+    if (!word || word.trim().length === 0) {
+      reply.code(400);
+      return {
+        success: false,
+        error: 'Word parameter is required',
+        timestamp: Date.now(),
+      };
+    }
+
+    const circularRefs = detectCircularReferences(word, maxDepth);
+    
+    return {
+      success: true,
+      data: {
+        word,
+        hasCircularReferences: circularRefs.length > 0,
+        circularPaths: circularRefs,
+        maxDepthChecked: maxDepth,
+      },
       timestamp: Date.now(),
     };
   });

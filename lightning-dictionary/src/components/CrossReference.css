@@ -1,0 +1,70 @@
+.cross-reference-text {
+  line-height: 1.6;
+}
+
+.cross-reference-word {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: #0066cc;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.cross-reference-word:hover {
+  color: #0052a3;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.cross-reference-word:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.cross-reference-word:active {
+  color: #003d7a;
+  transform: translateY(0.5px);
+}
+
+.cross-reference-word::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.cross-reference-word:hover::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cross-reference-word {
+    color: #4da6ff;
+  }
+  
+  .cross-reference-word:hover {
+    color: #66b3ff;
+  }
+  
+  .cross-reference-word:active {
+    color: #3399ff;
+  }
+  
+  .cross-reference-word:focus {
+    outline-color: #4da6ff;
+  }
+}

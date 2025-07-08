@@ -133,3 +133,47 @@ export function getMultipleDefinitions(words: string[]): Record<string, Enhanced
   
   return results;
 }
+
+// Check for circular references between words
+export function detectCircularReferences(word: string, maxDepth: number = 5): string[] {
+  const visited = new Set<string>();
+  const circularRefs: string[] = [];
+  
+  function checkWord(currentWord: string, path: string[], depth: number) {
+    if (depth > maxDepth) return;
+    
+    const normalizedWord = currentWord.toLowerCase();
+    if (path.includes(normalizedWord)) {
+      circularRefs.push(path.concat(normalizedWord).join(' → '));
+      return;
+    }
+    
+    if (visited.has(normalizedWord)) return;
+    visited.add(normalizedWord);
+    
+    const definition = getEnhancedDefinition(currentWord);
+    if (!definition) return;
+    
+    // Check all related words
+    const relatedWords = new Set<string>();
+    
+    // Add words from synonyms and antonyms
+    definition.posGroups.forEach(group => {
+      group.definitions.forEach(def => {
+        def.synonyms?.forEach(syn => relatedWords.add(syn));
+        def.antonyms?.forEach(ant => relatedWords.add(ant));
+      });
+    });
+    
+    // Add related words
+    definition.relatedWords?.forEach(word => relatedWords.add(word));
+    
+    // Check each related word
+    relatedWords.forEach(relatedWord => {
+      checkWord(relatedWord, [...path, normalizedWord], depth + 1);
+    });
+  }
+  
+  checkWord(word, [], 0);
+  return circularRefs;
+}

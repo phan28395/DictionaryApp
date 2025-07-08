@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { EnhancedWordDefinition, POSGroup, Definition } from '../types/enhanced-dictionary';
+import { CrossReference } from './CrossReference';
 import './MultiDefinition.css';
 
 interface MultiDefinitionProps {
@@ -19,20 +20,48 @@ interface DefinitionItemProps {
   definition: Definition;
   index: number;
   onWordClick?: (word: string) => void;
+  currentWord: string;
 }
 
-const DefinitionItem: React.FC<DefinitionItemProps> = ({ definition, index, onWordClick }) => {
+const DefinitionItem: React.FC<DefinitionItemProps> = ({ definition, index, onWordClick, currentWord }) => {
+  const excludeWords = useMemo(() => {
+    const words = new Set<string>();
+    words.add(currentWord.toLowerCase());
+    const variations = [
+      currentWord,
+      currentWord + 's',
+      currentWord + 'es',
+      currentWord + 'ed',
+      currentWord + 'ing',
+      currentWord.replace(/y$/, 'ies'),
+      currentWord.replace(/y$/, 'ied')
+    ];
+    variations.forEach(word => words.add(word.toLowerCase()));
+    return words;
+  }, [currentWord]);
   return (
     <div className="definition-item">
       <div className="definition-number">{index + 1}.</div>
       <div className="definition-content">
-        <p className="definition-text">{definition.text}</p>
+        <div className="definition-text">
+          <CrossReference
+            text={definition.text}
+            onWordClick={onWordClick}
+            excludeWords={excludeWords}
+          />
+        </div>
         
         {definition.examples && definition.examples.length > 0 && (
           <div className="definition-examples">
             {definition.examples.map((example, i) => (
               <p key={i} className="example-text">
-                <span className="example-label">Example:</span> {example}
+                <span className="example-label">Example:</span>
+                <CrossReference
+                  text={example}
+                  onWordClick={onWordClick}
+                  excludeWords={excludeWords}
+                  className="example-cross-reference"
+                />
               </p>
             ))}
           </div>
@@ -76,7 +105,13 @@ const DefinitionItem: React.FC<DefinitionItemProps> = ({ definition, index, onWo
         
         {definition.usage && (
           <div className="definition-usage">
-            <span className="usage-label">Usage:</span> {definition.usage}
+            <span className="usage-label">Usage:</span>
+            <CrossReference
+              text={definition.usage}
+              onWordClick={onWordClick}
+              excludeWords={excludeWords}
+              className="usage-cross-reference"
+            />
           </div>
         )}
       </div>
@@ -122,6 +157,7 @@ const POSGroupComponent: React.FC<POSGroupProps> = ({
               definition={def}
               index={index}
               onWordClick={onWordClick}
+              currentWord={word}
             />
           ))}
         </div>
