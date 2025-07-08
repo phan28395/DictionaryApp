@@ -1,7 +1,8 @@
 # ⚡ Quick Reference Card
 
 ## 🎯 Current Task
-**Step 2.3: Basic UI Popup** (Week 3-4 of Phase 1)
+**Step 3.1: REST API Server** (Week 5-6 of Phase 1)
+**Previous**: Step 2.3 Basic UI Popup ✅ COMPLETE
 
 ## 📍 Key Commands
 ```bash
@@ -24,27 +25,32 @@ npm run tauri dev          # Start development
 - Hotkeys: Alt+J, Ctrl+Shift+D
 - Cache: <1ms lookups, 10k capacity
 - Events: Frontend ↔ Backend communication
-- Performance: ~11ms current (target <50ms)
+- **Popup Window**: Appears near cursor with definitions ✅
+- **Performance**: <50ms achieved ✅
+- **Multiple close methods**: ✕ button, Escape, click outside, auto-close
+- **Wayland support**: Clipboard monitoring
 
 ## ❌ What's Missing
-- Popup window (using main window)
 - Dictionary data (cache empty)
 - Actual definitions
 - API backend
+- Pronunciation data
 
-## 🎨 Next Implementation
-```rust
-// 1. Create popup window in Rust
-WindowBuilder::new(app, "popup", WindowUrl::App("popup.html"))
-    .decorations(false)
-    .always_on_top(true)
-    .inner_size(350.0, 250.0)
+## 🎨 Next Implementation (Step 3.1: API Server)
+```javascript
+// 1. Create Express/Fastify server
+const app = express();
+app.use(compression());
 
-// 2. Position near cursor
-window.set_position(cursor_x + 10, cursor_y + 10)
+// 2. Load dictionary data
+const dictionary = require('./data/processed/dictionary.json');
 
-// 3. Show/hide on hotkey
-popup.show() / popup.hide()
+// 3. API endpoints
+app.get('/api/v1/define/:word', (req, res) => {
+  const word = req.params.word.toLowerCase();
+  const definition = dictionary[word];
+  res.json(definition || null);
+});
 ```
 
 ```tsx

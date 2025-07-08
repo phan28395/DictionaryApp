@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, Runtime, Emitter};
+use tauri::{AppHandle, Manager, Runtime, Emitter, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use arboard::Clipboard;
 use std::sync::{Arc, Mutex};
@@ -76,13 +76,8 @@ fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) ->
 fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) {
     let start_time = std::time::Instant::now();
     
-    // Show the window
-    if let Some(window) = app.get_webview_window("main") {
-        println!("Showing and focusing window");
-        let _ = window.show();
-        let _ = window.set_focus();
-        let _ = window.set_always_on_top(true);
-    }
+    // Create or show popup window
+    create_popup_window(app);
     
     // Try to get selected text
     match get_selected_text() {
@@ -197,18 +192,27 @@ impl ClipboardMonitor {
                             if is_single_word(&current) {
                                 println!("Valid word detected: {}", current);
                                 
+                                // Create popup window first
+                                create_popup_window(&app_handle);
+                                
                                 // Check cache
                                 let mut cache_guard = cache.lock().unwrap();
                                 if let Some(definition) = cache_guard.get(&current) {
                                     println!("Cache hit for clipboard word!");
-                                    let _ = app_handle.emit("clipboard-definition", serde_json::json!({
+                                    let _ = app_handle.emit("word-definition", serde_json::json!({
                                         "word": current,
                                         "definition": definition,
-                                        "from_cache": true
+                                        "from_cache": true,
+                                        "lookup_time_ms": 0
                                     }));
                                 } else {
                                     println!("Cache miss for clipboard word: {}", current);
-                                    let _ = app_handle.emit("clipboard-word", current.clone());
+                                    let _ = app_handle.emit("word-definition", serde_json::json!({
+                                        "word": current,
+                                        "definition": null,
+                                        "from_cache": false,
+                                        "lookup_time_ms": 0
+                                    }));
                                 }
                             } else {
                                 println!("Not a single word, ignoring");
@@ -235,4 +239,154 @@ fn is_single_word(text: &str) -> bool {
     trimmed.split_whitespace().count() == 1 && 
     trimmed.len() < 50 &&
     trimmed.chars().all(|c| c.is_alphabetic() || c == '-' || c == '\'')
+}
+
+fn create_popup_window<R: Runtime>(app: &AppHandle<R>) {
+    // Check if popup window already exists
+    if let Some(window) = app.get_webview_window("popup") {
+        println!("Popup window already exists, showing it");
+        let _ = window.show();
+        let _ = window.set_focus();
+        return;
+    }
+    
+    println!("Creating new popup window");
+    
+    // Safety check: Don't create popup window if we're just starting up
+    // This prevents accidental popup creation during development
+    static STARTUP_DELAY: std::sync::Once = std::sync::Once::new();
+    static mut STARTUP_COMPLETE: bool = false;
+    
+    STARTUP_DELAY.call_once(|| {
+        std::thread::spawn(|| {
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            unsafe { STARTUP_COMPLETE = true; }
+        });
+    });
+    
+    unsafe {
+        if !STARTUP_COMPLETE {
+            println!("Skipping popup creation during startup phase");
+            return;
+        }
+    }
+    
+    // Get cursor position
+    let (cursor_x, cursor_y) = get_cursor_position();
+    
+    // Popup dimensions
+    let popup_width = 400.0;
+    let popup_height = 300.0;
+    
+    // Calculate position near cursor (offset to avoid overlapping)
+    let offset_x = 20.0;
+    let offset_y = 20.0;
+    let position_x = cursor_x + offset_x;
+    let position_y = cursor_y + offset_y;
+    
+    // Get primary monitor to ensure popup stays on screen
+    if let Some(primary_monitor) = app.primary_monitor().ok().flatten() {
+        let monitor_size = primary_monitor.size();
+        let monitor_pos = primary_monitor.position();
+        
+        // Adjust position if popup would go off screen
+        let adjusted_x = if position_x + popup_width > (monitor_pos.x as f64 + monitor_size.width as f64) {
+            cursor_x - popup_width - offset_x
+        } else {
+            position_x
+        };
+        
+        let adjusted_y = if position_y + popup_height > (monitor_pos.y as f64 + monitor_size.height as f64) {
+            cursor_y - popup_height - offset_y
+        } else {
+            position_y
+        };
+        
+        let window = WebviewWindowBuilder::new(
+            app,
+            "popup",
+            WebviewUrl::App("/popup.html".into())
+        )
+        .title("Lightning Dictionary")
+        .decorations(true)  // Show window decorations so user can close
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .inner_size(popup_width, popup_height)
+        .position(adjusted_x, adjusted_y)
+        .resizable(true)  // Allow resizing
+        .closable(true)  // Ensure window can be closed
+        .focused(true)    // Give focus to window
+        .build();
+        
+        match window {
+            Ok(window) => {
+                println!("Popup window created successfully at ({}, {})", adjusted_x, adjusted_y);
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+            Err(e) => {
+                eprintln!("Failed to create popup window: {}", e);
+            }
+        }
+    } else {
+        // Fallback if we can't get monitor info
+        let window = WebviewWindowBuilder::new(
+            app,
+            "popup",
+            WebviewUrl::App("/popup.html".into())
+        )
+        .title("Lightning Dictionary")
+        .decorations(true)  // Show window decorations so user can close
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .inner_size(popup_width, popup_height)
+        .position(position_x, position_y)
+        .resizable(true)  // Allow resizing
+        .closable(true)  // Ensure window can be closed
+        .focused(true)    // Give focus to window
+        .build();
+        
+        match window {
+            Ok(window) => {
+                println!("Popup window created successfully");
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+            Err(e) => {
+                eprintln!("Failed to create popup window: {}", e);
+            }
+        }
+    }
+}
+
+fn get_cursor_position() -> (f64, f64) {
+    // Try to get cursor position using platform-specific methods
+    #[cfg(target_os = "linux")]
+    {
+        // Try using xdotool to get cursor position
+        use std::process::Command;
+        if let Ok(output) = Command::new("xdotool")
+            .args(&["getmouselocation", "--shell"])
+            .output() {
+            if let Ok(text) = String::from_utf8(output.stdout) {
+                let mut x = 0.0;
+                let mut y = 0.0;
+                for line in text.lines() {
+                    if line.starts_with("X=") {
+                        if let Ok(val) = line[2..].parse::<f64>() {
+                            x = val;
+                        }
+                    } else if line.starts_with("Y=") {
+                        if let Ok(val) = line[2..].parse::<f64>() {
+                            y = val;
+                        }
+                    }
+                }
+                return (x, y);
+            }
+        }
+    }
+    
+    // Fallback position if we can't get cursor position
+    (100.0, 100.0)
 }

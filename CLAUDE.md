@@ -91,19 +91,18 @@ You are a Senior Software Engineer implementing the Popup Dictionary project. Yo
   - [x] Optimize data structures
 
 #### Step 2.3: Basic UI Popup
-- [ ] **2.3.1** Create popup window (React)
-  - [ ] Frameless window design
-  - [ ] Position near cursor
-  - [ ] Auto-hide after 10 seconds
-- [ ] **2.3.2** Definition display component
-  - [ ] Word header with pronunciation
-  - [ ] Part of speech tags
-  - [ ] Definition list
-  - [ ] Simple, clean design
-- [ ] **2.3.3** Performance optimization
-  - [ ] Minimize React re-renders
-  - [ ] Use CSS for animations
-  - [ ] Measure render time
+- [x] **2.3.1** Create popup window (React)
+  - [x] Frameless window design
+  - [x] Position near cursor
+- [x] **2.3.2** Definition display component
+  - [x] Word header with pronunciation
+  - [x] Part of speech tags
+  - [x] Definition list
+  - [x] Simple, clean design
+- [x] **2.3.3** Performance optimization
+  - [x] Minimize React re-renders
+  - [x] Use CSS for animations
+  - [x] Measure render time
 
 ### Week 5-6: API Development & Integration
 

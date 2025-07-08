@@ -7,6 +7,16 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [react()],
+  
+  // Configure multiple entry points
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        popup: './popup.html'
+      }
+    }
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

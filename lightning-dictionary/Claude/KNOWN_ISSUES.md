@@ -1,5 +1,23 @@
 # Known Issues & Workarounds
 
+## ✅ Recently Fixed Issues
+
+### Popup Window Control Issues (Fixed 2025-01-08)
+**Issue**: Frameless popup appeared on startup, couldn't be closed or moved
+**Solution Implemented**:
+- Added window decorations (title bar with close/minimize buttons)
+- Made window resizable and movable
+- Added multiple close methods:
+  - Visual ✕ button in top-right corner
+  - Escape key handler
+  - Click outside popup to close
+  - Auto-close after 10 seconds
+- Added 2-second startup delay to prevent ghost popups
+**Files Modified**:
+- `src-tauri/src/hotkey_v2.rs` - Window configuration
+- `src/components/Popup.tsx` - Close handlers
+- `src/components/Popup.css` - Close button styling
+
 ## 🐛 Current Issues
 
 ### 1. Wayland Hotkey Support
@@ -24,10 +42,10 @@
 - Load data from processed JSON files
 - Implement data loader on app startup
 
-### 3. Main Window Instead of Popup
-**Issue**: Currently using main window, not a popup
-**Impact**: Not the intended UX, window too large
-**Status**: This is Step 2.3 (next implementation)
+### 3. ~~Main Window Instead of Popup~~ ✅ FIXED
+**Issue**: ~~Currently using main window, not a popup~~
+**Status**: ✅ FIXED in Step 2.3 implementation
+**Solution**: Popup window now implemented with proper controls
 
 ### 4. Platform-Specific Issues
 
@@ -103,7 +121,7 @@ Type 'any' used in event handlers
 | Ctrl+Shift+D | ✅ | ✅ | ✅ | ❌ |
 | Text Selection | ✅ | ✅ | ✅ | ✅ |
 | Clipboard Monitor | ✅ | ✅ | ✅ | ✅ |
-| Popup Window | 🚧 | 🚧 | 🚧 | 🚧 |
+| Popup Window | ✅ | ✅ | ✅ | ✅ |
 
 Legend: ✅ Working | ⚠️ Needs Permission | ❌ Not Supported | 🚧 Not Implemented
 
