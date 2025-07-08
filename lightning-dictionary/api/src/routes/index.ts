@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { getDefinition, searchWords, getDictionaryStats } from '../services/dictionary';
+import { getDefinition, searchWords, getDictionaryStats, getEnhancedDefinition, getMultipleDefinitions } from '../services/dictionary';
 import { ApiResponse, WordDefinition, SearchResult } from '../types/dictionary';
+import { MultiDefinitionResponse, EnhancedWordDefinition } from '../types/enhanced-dictionary';
 import { config } from '../config';
 
 export async function defineRoutes(server: FastifyInstance) {
@@ -103,6 +104,85 @@ export async function defineRoutes(server: FastifyInstance) {
     return {
       success: true,
       data: stats,
+      timestamp: Date.now(),
+    };
+  });
+
+  // Enhanced definition endpoint with multi-definition support
+  server.get<{
+    Params: { word: string };
+  }>('/api/v1/define/enhanced/:word', async (request, reply) => {
+    const { word } = request.params;
+    
+    if (!word || word.trim().length === 0) {
+      reply.code(400);
+      const response: MultiDefinitionResponse = {
+        success: false,
+        error: 'Word parameter is required',
+        cached: false,
+        timestamp: Date.now(),
+      };
+      return response;
+    }
+
+    const enhancedDef = getEnhancedDefinition(word);
+    
+    if (!enhancedDef) {
+      reply.code(404);
+      const response: MultiDefinitionResponse = {
+        success: false,
+        error: `Word '${word}' not found`,
+        cached: false,
+        timestamp: Date.now(),
+      };
+      return response;
+    }
+
+    // Set cache headers for performance
+    reply.headers({
+      'Cache-Control': `public, max-age=${config.cache.maxAge}, s-maxage=${config.cache.sMaxAge}`,
+      'ETag': `"${word}-enhanced-${enhancedDef.rank}"`,
+    });
+
+    const response: MultiDefinitionResponse = {
+      success: true,
+      data: enhancedDef,
+      cached: false,
+      timestamp: Date.now(),
+    };
+
+    return response;
+  });
+
+  // Batch definition endpoint for prefetching
+  server.post<{
+    Body: { words: string[] };
+  }>('/api/v1/define/batch', async (request, reply) => {
+    const { words } = request.body;
+    
+    if (!words || !Array.isArray(words) || words.length === 0) {
+      reply.code(400);
+      return {
+        success: false,
+        error: 'Words array is required',
+        timestamp: Date.now(),
+      };
+    }
+
+    // Limit batch size
+    const limitedWords = words.slice(0, 50);
+    const definitions = getMultipleDefinitions(limitedWords);
+
+    // Set cache headers
+    reply.headers({
+      'Cache-Control': 'public, max-age=300, s-maxage=600',
+    });
+
+    return {
+      success: true,
+      data: definitions,
+      requested: limitedWords.length,
+      found: Object.keys(definitions).length,
       timestamp: Date.now(),
     };
   });

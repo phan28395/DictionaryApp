@@ -1,0 +1,348 @@
+{
+  "phase": 2,
+  "name": "Enhanced Dictionary Features",
+  "duration": "8 weeks",
+  "prerequisites": [
+    "Phase 1 completed",
+    "API server running",
+    "Cache system operational"
+  ],
+  "steps": [
+    {
+      "id": "2.1",
+      "name": "Multi-Definition Display",
+      "duration": "3 hours",
+      "description": "Implement display of multiple definitions per word with POS grouping",
+      "files_to_create": [
+        "src/components/MultiDefinition.tsx",
+        "src/types/enhanced-dictionary.ts"
+      ],
+      "files_to_modify": [
+        "src/components/OptimizedPopup.tsx",
+        "api/src/services/dictionary.ts"
+      ],
+      "tests": [
+        "Definition grouping",
+        "POS display",
+        "Expand/collapse functionality"
+      ],
+      "verification": [
+        "Multiple definitions visible",
+        "Grouped by part of speech",
+        "Performance <50ms"
+      ]
+    },
+    {
+      "id": "2.2",
+      "name": "Clickable Cross-References",
+      "duration": "4 hours",
+      "description": "Make word references within definitions clickable for instant navigation",
+      "files_to_create": [
+        "src/components/CrossReference.tsx",
+        "src/hooks/useWordNavigation.ts"
+      ],
+      "files_to_modify": [
+        "src/components/MultiDefinition.tsx"
+      ],
+      "tests": [
+        "Click navigation",
+        "History tracking",
+        "Circular reference handling"
+      ],
+      "verification": [
+        "Words are clickable",
+        "Navigation history works",
+        "Back/forward buttons functional"
+      ]
+    },
+    {
+      "id": "2.3",
+      "name": "Pattern-Based Prefetching",
+      "duration": "3 hours",
+      "description": "Implement simple pattern-based word prefetching for faster perceived performance",
+      "files_to_create": [
+        "src/utils/prefetcher.ts",
+        "src-tauri/src/prefetch.rs"
+      ],
+      "files_to_modify": [
+        "src-tauri/src/cache.rs"
+      ],
+      "tests": [
+        "Prefetch accuracy",
+        "Cache warming",
+        "Memory limits"
+      ],
+      "verification": [
+        "Common patterns identified",
+        "Cache hit rate >85%",
+        "Memory usage controlled"
+      ]
+    },
+    {
+      "id": "2.4",
+      "name": "User Account System",
+      "duration": "6 hours",
+      "description": "Basic user accounts with preferences and saved words",
+      "files_to_create": [
+        "src/components/UserAccount.tsx",
+        "src/hooks/useAuth.ts",
+        "api/src/routes/auth.ts",
+        "api/src/models/user.ts"
+      ],
+      "files_to_modify": [
+        "src/App.tsx",
+        "api/src/index.ts"
+      ],
+      "tests": [
+        "Registration flow",
+        "Login/logout",
+        "Preference persistence"
+      ],
+      "verification": [
+        "User can register",
+        "Preferences saved",
+        "Secure authentication"
+      ]
+    },
+    {
+      "id": "2.5",
+      "name": "Word History Tracking",
+      "duration": "2 hours",
+      "description": "Track and display user's word lookup history",
+      "files_to_create": [
+        "src/components/WordHistory.tsx",
+        "src/hooks/useHistory.ts"
+      ],
+      "files_to_modify": [
+        "src-tauri/src/main.rs"
+      ],
+      "tests": [
+        "History recording",
+        "History display",
+        "Privacy controls"
+      ],
+      "verification": [
+        "History saved locally",
+        "Searchable history",
+        "Clear history option"
+      ]
+    },
+    {
+      "id": "2.6",
+      "name": "Performance Optimization Round 2",
+      "duration": "4 hours",
+      "description": "Optimize for 100+ concurrent users and larger dictionary",
+      "files_to_modify": [
+        "api/src/services/dictionary.ts",
+        "src-tauri/src/cache.rs",
+        "src/utils/performance.ts"
+      ],
+      "tests": [
+        "Load testing",
+        "Memory profiling",
+        "Response time benchmarks"
+      ],
+      "verification": [
+        "100 concurrent users",
+        "Response time <50ms",
+        "Memory usage <150MB"
+      ]
+    },
+    {
+      "id": "2.7",
+      "name": "AI Infrastructure Placeholders",
+      "duration": "2 hours",
+      "description": "Create placeholder infrastructure for future AI features",
+      "files_to_create": [
+        "api/src/services/ai-placeholder.ts",
+        "src/types/ai-context.ts"
+      ],
+      "files_to_modify": [
+        "api/src/routes/index.ts"
+      ],
+      "tests": [
+        "API structure",
+        "Fallback behavior",
+        "Type definitions"
+      ],
+      "verification": [
+        "Endpoints return mock data",
+        "Types defined",
+        "Documentation complete"
+      ]
+    },
+    {
+      "id": "2.8",
+      "name": "Enhanced Error Handling",
+      "duration": "2 hours",
+      "description": "Improve error handling and user feedback",
+      "files_to_create": [
+        "src/components/ErrorBoundary.tsx",
+        "src/utils/error-handler.ts"
+      ],
+      "files_to_modify": [
+        "src/App.tsx",
+        "src-tauri/src/error.rs"
+      ],
+      "tests": [
+        "Error recovery",
+        "User messaging",
+        "Logging"
+      ],
+      "verification": [
+        "Graceful error handling",
+        "Clear error messages",
+        "Error logs captured"
+      ]
+    },
+    {
+      "id": "2.9",
+      "name": "Dictionary Data Enhancement",
+      "duration": "3 hours",
+      "description": "Add more detailed dictionary data (synonyms, usage notes)",
+      "files_to_modify": [
+        "data/process_excel_simple.py",
+        "api/src/types/dictionary.ts"
+      ],
+      "tests": [
+        "Data integrity",
+        "Enhanced fields",
+        "Backward compatibility"
+      ],
+      "verification": [
+        "Synonyms displayed",
+        "Usage notes available",
+        "No performance regression"
+      ]
+    },
+    {
+      "id": "2.10",
+      "name": "Settings Enhancement",
+      "duration": "2 hours",
+      "description": "Add more customization options to settings",
+      "files_to_modify": [
+        "src/components/Settings.tsx",
+        "src/types/settings.ts"
+      ],
+      "tests": [
+        "New settings work",
+        "Persistence",
+        "UI updates"
+      ],
+      "verification": [
+        "Font size control",
+        "Color themes",
+        "Language preferences"
+      ]
+    },
+    {
+      "id": "2.11",
+      "name": "Keyboard Shortcuts System",
+      "duration": "3 hours",
+      "description": "Implement comprehensive keyboard shortcuts",
+      "files_to_create": [
+        "src/hooks/useKeyboardShortcuts.ts"
+      ],
+      "files_to_modify": [
+        "src/App.tsx",
+        "src/components/Settings.tsx"
+      ],
+      "tests": [
+        "Shortcut registration",
+        "Conflict detection",
+        "Customization"
+      ],
+      "verification": [
+        "All shortcuts work",
+        "No conflicts",
+        "Customizable"
+      ]
+    },
+    {
+      "id": "2.12",
+      "name": "Export/Import Features",
+      "duration": "3 hours",
+      "description": "Allow users to export/import their data",
+      "files_to_create": [
+        "src/components/DataExport.tsx",
+        "src/utils/data-export.ts"
+      ],
+      "files_to_modify": [
+        "src/components/Settings.tsx"
+      ],
+      "tests": [
+        "Export formats",
+        "Import validation",
+        "Data integrity"
+      ],
+      "verification": [
+        "JSON export works",
+        "CSV export works",
+        "Import preserves data"
+      ]
+    },
+    {
+      "id": "2.13",
+      "name": "Search Enhancement",
+      "duration": "3 hours",
+      "description": "Improve search with fuzzy matching and suggestions",
+      "files_to_create": [
+        "api/src/services/search.ts"
+      ],
+      "files_to_modify": [
+        "api/src/routes/index.ts",
+        "src/components/OptimizedPopup.tsx"
+      ],
+      "tests": [
+        "Fuzzy search",
+        "Suggestions",
+        "Performance"
+      ],
+      "verification": [
+        "Typos handled",
+        "Relevant suggestions",
+        "Fast results"
+      ]
+    },
+    {
+      "id": "2.14",
+      "name": "Documentation Update",
+      "duration": "2 hours",
+      "description": "Update all documentation for Phase 2 features",
+      "files_to_modify": [
+        "README.md",
+        "docs/API.md",
+        "docs/USER_GUIDE.md"
+      ],
+      "tests": [
+        "Documentation accuracy",
+        "Examples work",
+        "API docs complete"
+      ],
+      "verification": [
+        "All features documented",
+        "Examples tested",
+        "API reference complete"
+      ]
+    },
+    {
+      "id": "2.15",
+      "name": "Phase 2 Testing & Polish",
+      "duration": "4 hours",
+      "description": "Comprehensive testing and final polish",
+      "files_to_modify": [
+        "Various test files"
+      ],
+      "tests": [
+        "Integration tests",
+        "Performance benchmarks",
+        "User acceptance"
+      ],
+      "verification": [
+        "All tests pass",
+        "Performance targets met",
+        "Ready for Phase 3"
+      ]
+    }
+  ]
+}

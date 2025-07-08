@@ -1,6 +1,7 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { DictionaryData, WordDefinition, SearchResult } from '../types/dictionary';
+import { EnhancedWordDefinition, convertLegacyToEnhanced, generateMockDefinitions } from '../types/enhanced-dictionary';
 import { config } from '../config';
 
 let dictionaryData: DictionaryData | null = null;
@@ -101,4 +102,34 @@ export function getDictionaryStats() {
     totalWords: wordIndex.size,
     metadata: dictionaryData?.metadata || null,
   };
+}
+
+// Enhanced definition support
+export function getEnhancedDefinition(word: string): EnhancedWordDefinition | null {
+  const legacyDef = getDefinition(word);
+  
+  if (!legacyDef) {
+    // Try mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      return generateMockDefinitions(word);
+    }
+    return null;
+  }
+  
+  // Convert legacy format to enhanced format
+  return convertLegacyToEnhanced(word, legacyDef);
+}
+
+// Get multiple words at once (for prefetching)
+export function getMultipleDefinitions(words: string[]): Record<string, EnhancedWordDefinition> {
+  const results: Record<string, EnhancedWordDefinition> = {};
+  
+  for (const word of words) {
+    const enhanced = getEnhancedDefinition(word);
+    if (enhanced) {
+      results[word.toLowerCase()] = enhanced;
+    }
+  }
+  
+  return results;
 }

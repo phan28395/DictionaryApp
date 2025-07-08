@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { performanceTracker } from "./utils/performance";
 import { Settings } from "./components/Settings";
+import { TestMultiDefinition } from "./components/TestMultiDefinition";
 import "./App.css";
 
 interface Definition {
@@ -38,6 +39,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [perfStats, setPerfStats] = useState<any>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showMultiDefTest, setShowMultiDefTest] = useState(false);
 
   useEffect(() => {
     // Listen for word definition events from cache
@@ -187,6 +189,23 @@ function App() {
           }}
         >
           ⚙️ Settings
+        </button>
+        <button 
+          onClick={() => setShowMultiDefTest(!showMultiDefTest)}
+          style={{
+            background: showMultiDefTest ? '#60a5fa' : '#2a2a2a',
+            border: '1px solid #555',
+            color: '#fff',
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          📚 Test Multi-Definition
         </button>
       </div>
       
@@ -362,6 +381,9 @@ function App() {
 
       {/* Settings Modal */}
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      
+      {/* Multi-Definition Test */}
+      {showMultiDefTest && <TestMultiDefinition />}
     </div>
   );
 }

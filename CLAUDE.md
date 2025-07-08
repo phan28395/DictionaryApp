@@ -1,520 +1,391 @@
-# CLAUDE.md - Popup Dictionary Phase 1 Implementation Guide
+# CLAUDE.md - Automated Phase Implementation System
 
-## Persona Configuration
+## System Overview
 
-<role>
-You are a Senior Software Engineer implementing the Popup Dictionary project. You work methodically through Phase 1 (Foundation & Core Experience), creating a desktop application with sub-50ms popup performance. You document every decision, test thoroughly, and ensure seamless handoffs between implementation sessions. You explain technical concepts clearly for users with limited CS knowledge.
-</role>
+This file enables keyword-driven phase implementation with minimal human involvement. Each phase from the grand plan (SAP_Dictionary_MVC.md) can be initiated with a simple keyword, and the system will handle planning, implementation tracking, and handoff between Claude sessions.
 
-<current_phase>
-**Phase 1: Foundation & Core Experience (Weeks 1-8)**
-- Goal: Build the core dictionary experience with instant popup response
-- Focus: Tauri desktop app, hotkey capture, memory cache, basic API
-- Target: <50ms popup response time
-</current_phase>
+## Quick Start Keywords
 
-## Phase 1 Implementation Checklist
+### Phase Keywords (Human: just type the keyword)
+- `PHASE1` - Foundation & Core Experience 
+- `PHASE2` - Enhanced Dictionary Features
+- `PHASE3` - Language Expansion
+- `PHASE4` - Platform Maturity
+- `PHASE5` - AI Enhancement (Future)
+- `PHASE6` - Ecosystem Building (Future)
 
-### Week 1-2: Development Environment & Project Setup
+### Action Keywords
+- `PLAN <phase>` - Generate detailed implementation plan
+- `IMPLEMENT <step>` - Execute specific step from plan
+- `STATUS` - Show current progress
+- `CONTINUE` - Resume from last checkpoint
+- `REVIEW` - Audit completed work
 
-#### Step 1.1: Environment Setup
-- [x] **1.1.1** Install development tools
-  - [x] Install Node.js (v18+) and npm
-  - [x] Install Rust and Cargo
-  - [x] Install Git
-  - [x] Install VS Code with extensions
-- [x] **1.1.2** Verify installations
-  - [x] Run `node --version` (should show v18+)
-  - [x] Run `rustc --version` (should show 1.70+)
-  - [x] Run `cargo --version`
-  - [x] Run `git --version`
+## Automated Planning System
 
-#### Step 1.2: Project Initialization
-- [x] **1.2.1** Create project structure
-  ```
-  lightning-dictionary/
-  ├── src-tauri/       (Rust backend)
-  ├── src/             (React frontend)
-  ├── data/            (Dictionary data)
-  └── docs/            (Documentation)
-  ```
-- [ ] **1.2.2** Initialize Tauri project
-  - [x] Run `npm create tauri-app@latest`
-  - [x] Choose: React, TypeScript, npm
-  - [x] Project name: `lightning-dictionary`
-- [x] **1.2.3** Configure Git repository
-  - [x] Initialize Git: `git init`
-  - [x] Create `.gitignore`
-  - [x] Initial commit
+When you type a phase keyword (e.g., `PHASE2`), Claude will:
 
-#### Step 1.3: Data Processing Setup
-- [x] **1.3.1** Process dictionary data files
-  - [x] Parse `lightning-dictionary/data/wordFrequency.xlsx` (Tab "1 lemmas", column B) for word list
-  - [x] Create JSON structure for quick lookup
-- [x] **1.3.2** Create data loader utility
-  - [x] Build script to convert xlsx to JSON
-  - [x] Optimize for memory efficiency
-  - [x] Add data validation
+1. **Analyze Current State**
+   - Read implementation history from `docs/implementation_log.json`
+   - Check existing codebase for completed features
+   - Identify dependencies from previous phases
 
-### Week 3-4: Core Functionality Implementation
+2. **Generate Step-by-Step Plan**
+   - Break down phase into 15-20 atomic steps
+   - Each step should take 1-2 hours
+   - Include verification criteria
+   - Save to `docs/phase_X_plan.md`
 
-#### Step 2.1: Hotkey System
-- [x] **2.1.1** Implement global hotkey capture (Rust)
-  - [x] Use `global-hotkey` crate
-  - [x] Default: Alt+J (Windows/Linux(wayland-Fedora42)), Cmd+D (macOS)
-  - [x] Make configurable
-- [x] **2.1.2** Text selection capture
-  - [x] Get selected text from active window
-  - [x] Handle different OS clipboard APIs
-  - [x] Add error handling
-- [x] **2.1.3** Hotkey testing
-  - [x] Test in 10+ applications
-  - [x] Document any conflicts
-  - [x] Create fallback options
+3. **Create Implementation Tracking**
+   - Initialize tracking in `docs/implementation_log.json`
+   - Set up test criteria
+   - Define success metrics
 
-#### Step 2.2: Memory Cache Implementation
-- [x] **2.2.1** Design cache structure
-  ```rust
-  struct DictionaryCache {
-      words: HashMap<String, Definition>,
-      lru_order: VecDeque<String>,
-      max_size: usize,
-  }
-  ```
-- [x] **2.2.2** Implement LRU eviction
-  - [x] Track access order
-  - [x] Evict oldest when full
-  - [x] Target: 10,000 words in memory
-- [x] **2.2.3** Cache performance testing
-  - [x] Measure lookup time (<1ms target)
-  - [x] Test memory usage
-  - [x] Optimize data structures
+## Implementation Tracking System
 
-#### Step 2.3: Basic UI Popup
-- [x] **2.3.1** Create popup window (React)
-  - [x] Frameless window design
-  - [x] Position near cursor
-- [x] **2.3.2** Definition display component
-  - [x] Word header with pronunciation
-  - [x] Part of speech tags
-  - [x] Definition list
-  - [x] Simple, clean design
-- [x] **2.3.3** Performance optimization
-  - [x] Minimize React re-renders
-  - [x] Use CSS for animations
-  - [x] Measure render time
-
-### Week 5-6: API Development & Integration
-
-#### Step 3.1: REST API Server
-- [x] **3.1.1** Setup Express/Fastify server
-  - [x] Choose lightweight framework
-  - [x] Configure for performance
-  - [x] Add compression
-- [x] **3.1.2** Dictionary endpoints
-  - [x] `GET /api/v1/define/:word`
-  - [x] `GET /api/v1/search?q=:query`
-  - [x] Add response caching headers
-- [x] **3.1.3** Data loading
-  - [x] Load processed dictionary data
-  - [x] Keep in server memory
-  - [x] Implement efficient search
-
-#### Step 3.2: Client-Server Integration
-- [x] **3.2.1** HTTP client in Tauri
-  - [x] Use `reqwest` for async requests
-  - [x] Add timeout handling (100ms)
-  - [x] Implement retry logic
-- [x] **3.2.2** Fallback strategy
-  - [x] Check memory cache first
-  - [x] Fall back to API if miss
-  - [x] Show cached while fetching
-- [x] **3.2.3** Error handling
-  - [x] Network failure handling
-  - [x] Show user-friendly messages
-  - [x] Log errors for debugging
-
-### Week 7-8: Polish & Performance
-
-#### Step 4.1: Performance Optimization
-- [ ] **4.1.1** Measure end-to-end latency
-  - [ ] Hotkey press → popup visible
-  - [ ] Use performance marks
-  - [ ] Create benchmark suite
-- [ ] **4.1.2** Optimize critical path
-  - [ ] Profile with Chrome DevTools
-  - [ ] Minimize IPC calls
-  - [ ] Reduce bundle size
-- [ ] **4.1.3** Achieve <50ms target
-  - [ ] Test on various hardware
-  - [ ] Document performance metrics
-  - [ ] Create performance budget
-
-#### Step 4.2: Cross-Platform Testing
-- [ ] **4.2.1** Windows testing
-  - [ ] Windows 10 compatibility
-  - [ ] Windows 11 compatibility
-  - [ ] Handle DPI scaling
-- [ ] **4.2.2** macOS testing
-  - [ ] macOS 11+ compatibility
-  - [ ] Permissions handling
-  - [ ] Retina display support
-- [ ] **4.2.3** Linux testing
-  - [ ] Ubuntu 20.04+
-  - [ ] X11 and Wayland
-  - [ ] Package formats (.deb, .rpm)
-
-#### Step 4.3: User Experience Polish
-- [ ] **4.3.1** Smooth animations
-  - [ ] Fade in/out effects
-  - [ ] No visual glitches
-  - [ ] 60fps animations
-- [ ] **4.3.2** Keyboard navigation
-  - [ ] Escape to close
-  - [ ] Tab through content
-  - [ ] Copy definition shortcut
-- [ ] **4.3.3** Settings interface
-  - [ ] Hotkey customization
-  - [ ] Theme selection
-  - [ ] Cache size control
-
-## Implementation Instructions for Non-Technical Users
-
-### Getting Started (Step-by-Step)
-
-1. **Install Required Software**
-   ```bash
-   # Windows users:
-   # 1. Download Node.js from https://nodejs.org (click "LTS" version)
-   # 2. Download Rust from https://rustup.rs (run the installer)
-   # 3. Download Git from https://git-scm.com
-   # 4. Download VS Code from https://code.visualstudio.com
-   
-   # Linux/Mac users can use terminal:
-   # Ubuntu/Debian:
-   sudo apt update
-   sudo apt install nodejs npm git
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   
-   # macOS:
-   brew install node git
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   ```
-
-2. **Create Your First Tauri App**
-   ```bash
-   # Open terminal/command prompt
-   # Navigate to where you want your project:
-   cd ~/Documents
-   
-   # Create the app:
-   npm create tauri-app@latest
-   # When prompted:
-   # - Project name: popup-dictionary
-   # - Package manager: npm
-   # - UI template: React
-   # - Language: TypeScript
-   ```
-
-3. **Understanding the Code Structure**
-   - `src/` folder: Your web app (React/TypeScript)
-   - `src-tauri/` folder: Your desktop app logic (Rust)
-   - Think of it like: React = what users see, Rust = system integration
-
-### Changelog Format
-
-## Changelog Entry - [Date] - Session [#]
-
-### Session 2 - 2025-01-08
-
-#### Completed
-- [x] Step 4.1: Performance Optimization (All sub-steps)
-  - [x] 4.1.1: Measure end-to-end latency
-  - [x] 4.1.2: Optimize critical path
-  - [x] 4.1.3: Achieve <50ms target ✅
-- [x] Step 4.2: Cross-Platform Testing (All sub-steps)
-  - [x] 4.2.1: Windows testing (ready for testing)
-  - [x] 4.2.2: macOS testing (ready for testing)
-  - [x] 4.2.3: Linux testing (confirmed working on Wayland)
-- [x] Step 4.3: User Experience Polish (All sub-steps)
-  - [x] 4.3.1: Smooth animations (60fps achieved)
-  - [x] 4.3.2: Keyboard navigation (full accessibility)
-  - [x] 4.3.3: Settings interface (comprehensive customization)
-
-#### Performance Results
-- **Cache Hit**: <1ms (0.022ms average) ✅
-- **API Response**: 1.32ms average ✅
-- **End-to-End**: <50ms target achieved! ✅
-- **Memory Usage**: 8MB total
-- **Throughput**: 578+ req/s
-
-#### Key Implementations
-1. **Performance Tracking System**
-   - Backend (Rust) and frontend (React) metrics
-   - Real-time performance dashboard
-   - Automated performance tests
-
-2. **Cross-Platform Support**
-   - Linux: Full support with Wayland clipboard fallback
-   - Windows/macOS: Ready for testing
-   - Platform detection and adaptation
-
-3. **User Experience**
-   - Smooth 60fps animations with GPU acceleration
-   - Complete keyboard navigation system
-   - Comprehensive settings with persistence
-
-#### Decisions Made
-- **Animation Library**: Custom CSS animations for performance
-- **Settings Storage**: Dual storage (localStorage + file system)
-- **Keyboard Nav**: Focus trap with ARIA support
-- **Performance Target**: Successfully achieved <50ms
-
-#### Next Session Starting Point
-- Phase 1 is COMPLETE! 🎉
-- Ready for beta testing
-- Consider starting Phase 2 features:
-  - Pronunciation audio
-  - Word history
-  - Enhanced dictionary data
-  - Auto-updater
-
-### Session 1 - 2024-01-07
-
-#### Completed
-- [x] Environment setup documentation (Step 1.1)
-- [x] Project structure planning (Step 1.2)
-- [x] Data processing strategy defined (Step 1.3)
-
-#### In Progress
-- [ ] Hotkey system implementation (Step 2.1) - 0% complete
-  - Next: Install global-hotkey crate
-  - Research OS-specific implementations
-
-#### Decisions Made
-- **Tech Stack**: Tauri + React + TypeScript confirmed
-- **Cache Size**: 10,000 words in memory (approx 50MB)
-- **Hotkey**: Alt+J (customizable) as default
-
-#### Blockers/Issues
-- Need to test hotkey conflicts with common applications
-- Clipboard access may require permissions on macOS
-
-#### Next Session Starting Point
-- Begin with Step 2.1.1: Implement global hotkey capture
-- Resources needed:
-  - global-hotkey crate documentation
-  - OS-specific clipboard APIs
-  - Test applications list
-
-### Code Templates
-
-#### Rust Hotkey Handler Template
-```rust
-// src-tauri/src/hotkey.rs
-use global_hotkey::{GlobalHotKeyManager, HotKey, KeyCode, Modifiers};
-
-pub fn setup_hotkey() -> Result<(), Box<dyn std::error::Error>> {
-    let manager = GlobalHotKeyManager::new()?;
-    let hotkey = HotKey::new(
-        Modifiers::CONTROL,
-        KeyCode::D
-    );
-    
-    manager.register(hotkey, || {
-        // Get selected text
-        // Show popup window
-    })?;
-    
-    Ok(())
-}
-```
-
-#### React Popup Component Template
-```tsx
-// src/components/Popup.tsx
-import React, { useEffect, useState } from 'react';
-
-interface Definition {
-  word: string;
-  pos: string;
-  definitions: string[];
-}
-
-export const Popup: React.FC = () => {
-  const [definition, setDefinition] = useState<Definition | null>(null);
-  
-  useEffect(() => {
-    // Listen for word lookup events from Rust
-  }, []);
-  
-  return (
-    <div className="popup">
-      {definition && (
-        <>
-          <h2>{definition.word}</h2>
-          <span className="pos">{definition.pos}</span>
-          <ul>
-            {definition.definitions.map((def, i) => (
-              <li key={i}>{def}</li>
-            ))}
-          </ul>
-        </>
-      )}
-    </div>
-  );
-};
-```
-
-#### Data Processing Script Template
-```javascript
-// scripts/process-dictionary.js
-const fs = require('fs');
-const path = require('path');
-
-function processDictionary() {
-  // Read the lemmas file
-  const data = fs.readFileSync('data_structure/lemmas_60k.txt', 'utf8');
-  const lines = data.split('\n');
-  
-  const words = {};
-  
-  // Skip header lines
-  for (let i = 8; i < lines.length; i++) {
-    const parts = lines[i].split('\t');
-    if (parts.length > 3) {
-      const rank = parseInt(parts[0]);
-      const word = parts[1];
-      const pos = parts[2];
-      const freq = parseInt(parts[3]);
-      
-      // Only keep top 10,000 words
-      if (rank <= 10000) {
-        words[word] = {
-          rank,
-          pos,
-          frequency: freq,
-          definitions: [] // To be populated from other sources
-        };
+### Implementation Log Structure
+```json
+{
+  "phases": {
+    "phase1": {
+      "status": "completed",
+      "completion_date": "2025-01-08",
+      "steps": {
+        "1.1": {
+          "name": "Environment Setup",
+          "status": "completed",
+          "files_modified": ["package.json", "tsconfig.json"],
+          "test_results": "passed",
+          "notes": "Node.js v18, Rust 1.70+"
+        }
+      }
+    },
+    "phase2": {
+      "status": "in_progress",
+      "current_step": "2.3",
+      "steps": {
+        "2.1": {
+          "name": "Multi-definition Display",
+          "status": "completed",
+          "files_modified": ["src/components/Definition.tsx"],
+          "test_results": "passed"
+        },
+        "2.2": {
+          "name": "Cross-references",
+          "status": "in_progress",
+          "blockers": ["Need hypernym data structure"]
+        }
       }
     }
-  }
-  
-  // Save as JSON
-  fs.writeFileSync(
-    'data/dictionary.json',
-    JSON.stringify(words, null, 2)
-  );
-  
-  console.log(`Processed ${Object.keys(words).length} words`);
+  },
+  "current_focus": "phase2",
+  "last_update": "2025-01-09T10:30:00Z"
 }
-
-processDictionary();
 ```
 
-## Performance Measurement Guide
+## Phase Implementation Templates
 
-### How to Measure <50ms Response Time
-```javascript
-// In your Rust code:
-let start = std::time::Instant::now();
-// ... your code ...
-println!("Time taken: {:?}", start.elapsed());
+### PHASE 1: Foundation & Core Experience ✅ COMPLETED
+Status: Completed on 2025-01-08
+Key Achievement: <30ms popup response time
 
-// In your React code:
-performance.mark('hotkey-pressed');
-// ... render popup ...
-performance.mark('popup-visible');
-performance.measure('popup-time', 'hotkey-pressed', 'popup-visible');
-console.log(performance.getEntriesByName('popup-time')[0].duration);
+### PHASE 2: Enhanced Dictionary Features
+
+#### When human types: `PHASE2`
+
+Claude will generate:
+
+```markdown
+# Phase 2 Implementation Plan
+
+## Current State Analysis
+- Phase 1 completed with <30ms response time
+- Basic dictionary with 60k words implemented
+- REST API and caching layer operational
+
+## Phase 2 Steps
+
+### Step 2.1: Multi-Definition Display
+**Time**: 2 hours
+**Files to modify**: 
+- src/components/Definition.tsx (new)
+- src/types/dictionary.ts
+- api/src/services/dictionary.ts
+
+**Implementation**:
+1. Create Definition component with POS grouping
+2. Update dictionary data structure
+3. Modify API to return multiple definitions
+4. Add expansion/collapse UI
+
+**Verification**:
+- [ ] Shows multiple definitions per word
+- [ ] Groups by part of speech
+- [ ] Smooth expand/collapse animation
+- [ ] Performance still <50ms
+
+### Step 2.2: Clickable Cross-References
+**Time**: 3 hours
+**Files to modify**:
+- src/components/CrossReference.tsx (new)
+- src/hooks/useWordNavigation.ts (new)
+- src/utils/wordParser.ts (new)
+
+**Implementation**:
+1. Parse definition text for word references
+2. Create clickable word chips
+3. Implement navigation history
+4. Add back/forward buttons
+
+**Verification**:
+- [ ] Words in definitions are clickable
+- [ ] Navigation history works
+- [ ] No performance degradation
+- [ ] Circular reference handling
+
+[... continue for all steps ...]
 ```
 
-### Performance Testing Checklist
-- [ ] Cold start: First popup after app launch
-- [ ] Warm start: Subsequent popups
-- [ ] Cache hit: Word already in memory
-- [ ] Cache miss: Word needs loading
-- [ ] Large definition: Multiple meanings
-- [ ] Rapid lookups: 10 words in 10 seconds
+### PHASE 3: Language Expansion
 
-## Review Checkpoints
+#### When human types: `PHASE3`
 
-### After Each Major Step
-1. **Code Review Questions**:
-   - Does it work on all target platforms?
-   - Is the code readable and documented?
-   - Are there any performance bottlenecks?
+Claude will:
+1. Check Phase 2 completion status
+2. Analyze existing translation infrastructure
+3. Generate language addition plan
+4. Create batch processing scripts
+5. Design language detection system
 
-2. **User Testing**:
-   - Can you trigger the popup reliably?
-   - Does it feel instant (<50ms)?
-   - Is the definition clear and readable?
+### PHASE 4: Platform Maturity
 
-3. **Technical Metrics**:
-   - Memory usage under 100MB?
-   - CPU usage minimal when idle?
-   - No memory leaks after extended use?
+#### When human types: `PHASE4`
 
-## Troubleshooting Guide
+Claude will:
+1. Audit performance metrics
+2. Design plugin architecture
+3. Plan monitoring infrastructure
+4. Create billing system outline
+5. Prepare for production deployment
 
-### Common Issues and Solutions
+### PHASE 5: AI Enhancement (Future)
 
-1. **Hotkey Not Working**
-   - Windows: Run as administrator
-   - macOS: Grant accessibility permissions
-   - Linux: Check window manager settings
+#### When human types: `PHASE5`
 
-2. **Slow Popup**
-   - Check Chrome DevTools Performance tab
-   - Reduce initial render complexity
-   - Preload popup window
+Claude will:
+1. Review AI placeholder infrastructure
+2. Design context analysis system
+3. Plan AI API integration
+4. Create fallback mechanisms
+5. Estimate costs and performance impact
 
-3. **High Memory Usage**
-   - Reduce cache size
-   - Implement better eviction
-   - Check for memory leaks
+## Step Implementation Protocol
 
-## Handoff Protocol
+### When human types: `IMPLEMENT 2.1`
 
-When ending a session, always provide:
-1. Last completed step number
-2. Any partial work (with TODOs)
-3. Specific next action needed
-4. Any discovered issues or blockers
-5. Test results from completed work
+Claude will:
 
-Example:
+1. **Pre-Implementation Check**
+   ```
+   - Dependencies satisfied? ✓
+   - Previous step completed? ✓
+   - Tests passing? ✓
+   ```
+
+2. **Implementation**
+   - Create/modify required files
+   - Write comprehensive tests
+   - Update documentation
+   - Commit with descriptive message
+
+3. **Verification**
+   - Run tests
+   - Check performance metrics
+   - Update implementation log
+   - Prepare handoff notes
+
+4. **Update Tracking**
+   ```json
+   {
+     "step": "2.1",
+     "status": "completed",
+     "duration": "1h 45m",
+     "files_modified": [...],
+     "tests_added": 5,
+     "performance_impact": "none"
+   }
+   ```
+
+## Handoff Between Claude Sessions
+
+### Session End Protocol
+When implementation session ends, Claude will:
+
+1. **Save Progress**
+   - Update `docs/implementation_log.json`
+   - Commit all changes
+   - Document any blockers
+
+2. **Create Handoff File**
+   `docs/handoff_YYYYMMDD_HHMM.md`:
+   ```markdown
+   # Implementation Handoff
+   
+   ## Completed
+   - Step 2.1: Multi-definition display ✓
+   - Step 2.2: Cross-references (partial)
+   
+   ## Current State
+   - Working on: CrossReference component
+   - Line 45 in src/components/CrossReference.tsx
+   - TODO: Implement circular reference detection
+   
+   ## Next Actions
+   1. Complete circular reference detection
+   2. Add tests for edge cases
+   3. Start Step 2.3: Prefetching logic
+   
+   ## Known Issues
+   - None
+   
+   ## Performance Metrics
+   - Still meeting <50ms target
+   - Memory usage: 8.2MB (acceptable)
+   ```
+
+### Session Start Protocol
+When new session starts with `CONTINUE`:
+
+1. **Load State**
+   - Read latest handoff file
+   - Check implementation log
+   - Verify environment
+
+2. **Resume Work**
+   - Continue from exact stopping point
+   - Run tests to ensure stability
+   - Complete current step
+
+## Success Metrics by Phase
+
+### Phase 2 Metrics
+- [ ] All definitions display correctly
+- [ ] Cross-references work instantly
+- [ ] Prefetching improves perceived speed
+- [ ] User accounts functional
+- [ ] Performance <50ms maintained
+
+### Phase 3 Metrics
+- [ ] 10 languages fully supported
+- [ ] Translation quality verified
+- [ ] Language auto-detection works
+- [ ] Wikipedia integration <2s
+- [ ] Sync works across devices
+
+### Phase 4 Metrics
+- [ ] 99.5% uptime achieved
+- [ ] Plugin API documented
+- [ ] Monitoring dashboards live
+- [ ] Billing system operational
+- [ ] 100k+ users supported
+
+## Emergency Protocols
+
+### If implementation fails:
+1. Type `ROLLBACK <step>`
+2. Claude will revert changes
+3. Analyze failure
+4. Propose alternative approach
+
+### If performance degrades:
+1. Type `PERFORMANCE`
+2. Claude will run benchmarks
+3. Identify bottlenecks
+4. Optimize critical paths
+
+## File Organization
+
 ```
-Session ending at Step 2.1.2
-- Completed: Global hotkey registration works on Windows
-- TODO: Test on macOS, implement Linux support
-- Next: Implement text selection capture
-- Issue: macOS requires accessibility permissions
-- Tests: Windows hotkey triggers in 8/10 test apps
+DictionaryApp/
+├── CLAUDE.md (this file)
+├── SAP_Dictionary_MVC.md (grand plan)
+├── docs/
+│   ├── implementation_log.json
+│   ├── phase_1_plan.md
+│   ├── phase_2_plan.md (generated)
+│   ├── handoff_YYYYMMDD_HHMM.md
+│   └── test_results/
+├── lightning-dictionary/
+│   ├── src/ (frontend)
+│   ├── src-tauri/ (backend)
+│   ├── api/ (REST API)
+│   └── tests/
+└── scripts/
+    ├── plan_generator.py
+    └── progress_tracker.py
 ```
 
-## Next Claude Session Startup
+## Usage Examples
 
-When starting a new session, the Claude should:
-1. Read the previous changelog entry
-2. Identify the current step from checklist
-3. Review any blockers or issues
-4. Continue implementation from last point
-5. Update changelog with new progress
-
-### Session Startup Template
+### Human: Starting Phase 2
 ```
-I'm continuing implementation of Phase 1 of the Popup Dictionary.
-
-**Previous Session Summary**:
-- Last completed: [Step number and description]
-- Current task: [What needs to be done]
-- Known issues: [Any blockers]
-
-**Today's Goals**:
-1. [Specific task 1]
-2. [Specific task 2]
-3. [Specific task 3]
-
-Shall I proceed with [specific next action]?
+Human: PHASE2
+Claude: [Generates complete Phase 2 plan with 15 steps]
 ```
+
+### Human: Implementing a step
+```
+Human: IMPLEMENT 2.1
+Claude: [Implements multi-definition display, runs tests, updates tracking]
+```
+
+### Human: Checking status
+```
+Human: STATUS
+Claude: Phase 2 in progress (3/15 steps completed)
+        Current: Step 2.4 - User accounts
+        Time spent: 6 hours
+        Performance: ✓ <50ms maintained
+```
+
+### Human: Continuing work
+```
+Human: CONTINUE
+Claude: Resuming from Step 2.4 - User accounts
+        Last action: Created user schema
+        Next: Implement authentication endpoints
+```
+
+## Automated Testing Protocol
+
+Each step implementation includes:
+1. Unit tests (minimum 80% coverage)
+2. Integration tests for API changes
+3. Performance benchmarks
+4. Cross-platform verification
+5. User acceptance criteria
+
+## Documentation Requirements
+
+Each implementation automatically updates:
+1. API documentation (OpenAPI spec)
+2. Component documentation (JSDoc/TSDoc)
+3. Architecture diagrams (if structural changes)
+4. User guides (for new features)
+5. Developer guides (for new APIs)
+
+## Version Control Strategy
+
+- Branch naming: `phase-X-step-Y`
+- Commit format: `feat(phaseX): Implement step X.Y - description`
+- PR description includes implementation log excerpt
+- Automated PR creation for review
+
+---
+
+**Note**: This system is designed for maximum automation. Human involvement is limited to:
+1. Typing phase keywords to initiate planning
+2. Typing step numbers to trigger implementation
+3. Reviewing completed work (optional)
+
+All planning, implementation, testing, and documentation happens automatically based on the patterns established in this file.
