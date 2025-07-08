@@ -3,6 +3,8 @@ mod cache;
 mod api_client;
 mod dictionary;
 mod error;
+mod performance;
+mod settings;
 
 #[cfg(test)]
 mod cache_benchmark;
@@ -10,6 +12,8 @@ mod cache_benchmark;
 use hotkey_v2::HotkeyManager;
 use cache::{create_cache, ThreadSafeCache, Definition};
 use dictionary::DictionaryService;
+use performance::{PERF_TRACKER, PerformanceStats};
+use settings::{get_settings, save_settings};
 use std::sync::Arc;
 use serde::Serialize;
 use tauri::Manager;
@@ -73,6 +77,16 @@ fn search_words(query: &str, state: tauri::State<AppState>) -> SearchResult {
     }
 }
 
+#[tauri::command]
+fn get_performance_stats() -> PerformanceStats {
+    PERF_TRACKER.get_stats()
+}
+
+#[tauri::command]
+fn reset_performance_stats() {
+    PERF_TRACKER.reset();
+}
+
 struct AppState {
     cache: ThreadSafeCache,
     dictionary_service: Arc<DictionaryService>,
@@ -103,7 +117,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(app_state)
-        .invoke_handler(tauri::generate_handler![greet, lookup_word, cache_stats, search_words])
+        .invoke_handler(tauri::generate_handler![greet, lookup_word, cache_stats, search_words, get_performance_stats, reset_performance_stats, get_settings, save_settings])
         .setup(move |app| {
             // Get the app handle and then the state
             let handle = app.handle();

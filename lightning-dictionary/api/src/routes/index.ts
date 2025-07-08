@@ -5,7 +5,7 @@ import { config } from '../config';
 
 export async function defineRoutes(server: FastifyInstance) {
   // Health check endpoint
-  server.get('/health', async (request, reply) => {
+  server.get('/health', async () => {
     const stats = getDictionaryStats();
     return {
       status: 'ok',
@@ -93,7 +93,7 @@ export async function defineRoutes(server: FastifyInstance) {
   });
 
   // Get dictionary statistics
-  server.get('/api/v1/stats', async (request, reply) => {
+  server.get('/api/v1/stats', async (_request, reply) => {
     const stats = getDictionaryStats();
     
     reply.headers({

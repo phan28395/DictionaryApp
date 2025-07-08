@@ -3,6 +3,7 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 use arboard::Clipboard;
 use std::sync::{Arc, Mutex};
 use crate::dictionary::DictionaryService;
+use crate::performance::PERF_TRACKER;
 use serde_json;
 
 pub struct HotkeyManager {
@@ -74,6 +75,7 @@ fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, dictionary_service: Arc<Di
 }
 
 fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, dictionary_service: Arc<DictionaryService>) {
+    PERF_TRACKER.mark("hotkey_pressed");
     let start_time = std::time::Instant::now();
     
     // Create or show popup window
@@ -82,6 +84,7 @@ fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, dictionary_service: Arc<D
     // Try to get selected text
     match get_selected_text() {
         Ok(text) if !text.is_empty() => {
+            PERF_TRACKER.mark("text_captured");
             println!("Selected text: {}", text);
             
             // Look up word using dictionary service (cache + API fallback)

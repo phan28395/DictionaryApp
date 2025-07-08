@@ -1,7 +1,9 @@
 use crate::cache::{ThreadSafeCache, Definition};
 use crate::api_client::DictionaryApiClient;
 use crate::error::{DictionaryError, DictionaryResult};
+use crate::performance::PERF_TRACKER;
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::runtime::Handle;
 
 pub struct DictionaryService {
@@ -27,14 +29,20 @@ impl DictionaryService {
     /// 2. If not found, fetch from API
     /// 3. Cache the result for future lookups
     pub fn lookup_word(&self, word: &str) -> DictionaryResult<Definition> {
+        PERF_TRACKER.mark("cache_lookup_start");
+        
         // First, check the cache
-        {
+        let _cache_hit = {
             match self.cache.lock() {
                 Ok(mut cache) => {
                     if let Some(definition) = cache.get(word) {
+                        PERF_TRACKER.mark("cache_lookup_end");
                         println!("Cache hit for word: {}", word);
+                        PERF_TRACKER.mark("backend_complete");
+                        PERF_TRACKER.measure_backend(true, None);
                         return Ok(definition);
                     }
+                    false
                 },
                 Err(e) => {
                     // Log cache error but continue with API lookup
@@ -42,9 +50,12 @@ impl DictionaryService {
                         message: format!("Failed to acquire cache lock: {}", e),
                     };
                     error.log_error();
+                    false
                 }
             }
-        }
+        };
+        
+        PERF_TRACKER.mark("cache_lookup_end");
 
         // Cache miss - try to fetch from API
         println!("Cache miss for word: {}. Fetching from API...", word);
@@ -53,9 +64,11 @@ impl DictionaryService {
         let api_client = self.api_client.clone();
         let word_str = word.to_string();
         
+        let api_start = Instant::now();
         let result = self.runtime_handle.block_on(async move {
             api_client.get_definition(&word_str).await
         });
+        let api_duration = api_start.elapsed();
 
         match result {
             Ok(Some(api_def)) => {
@@ -74,6 +87,8 @@ impl DictionaryService {
                 }
                 
                 println!("Successfully fetched and cached word: {}", word);
+                PERF_TRACKER.mark("backend_complete");
+                PERF_TRACKER.measure_backend(false, Some(api_duration));
                 Ok(definition)
             },
             Ok(None) => {

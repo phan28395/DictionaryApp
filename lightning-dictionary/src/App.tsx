@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { performanceTracker } from "./utils/performance";
+import { Settings } from "./components/Settings";
 import "./App.css";
 
 interface Definition {
@@ -34,16 +36,28 @@ function App() {
   const [testWord, setTestWord] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [perfStats, setPerfStats] = useState<any>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     // Listen for word definition events from cache
     const unlistenDefinition = listen<CacheEvent>("word-definition", (event) => {
       console.log("Word definition event:", event.payload);
+      performanceTracker.mark('render-start');
       const data = event.payload;
       setWord(data.word);
       setDefinition(data.definition);
       setFromCache(data.from_cache);
       setLookupTime(data.lookup_time_ms);
+      
+      // Mark render complete on next tick
+      requestAnimationFrame(() => {
+        performanceTracker.mark('render-complete');
+        const metrics = performanceTracker.measure();
+        if (metrics) {
+          console.log(`Total E2E time: ${metrics.totalTime.toFixed(2)}ms`);
+        }
+      });
     });
 
     // Listen for clipboard definition events
@@ -96,6 +110,29 @@ function App() {
     }
   };
 
+  const loadPerfStats = async () => {
+    try {
+      const backendStats = await invoke<any>("get_performance_stats");
+      const frontendStats = performanceTracker.getStats();
+      setPerfStats({
+        backend: backendStats,
+        frontend: frontendStats
+      });
+    } catch (error) {
+      console.error("Failed to load performance stats:", error);
+    }
+  };
+
+  const resetPerfStats = async () => {
+    try {
+      await invoke("reset_performance_stats");
+      performanceTracker.reset();
+      setPerfStats(null);
+    } catch (error) {
+      console.error("Failed to reset performance stats:", error);
+    }
+  };
+
   const testCacheLookup = async () => {
     if (!testWord.trim()) return;
     
@@ -131,7 +168,27 @@ function App() {
 
   return (
     <div className="container">
-      <h1>⚡ Lightning Dictionary - Cache Test</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>⚡ Lightning Dictionary</h1>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="button-press color-transition"
+          style={{
+            background: '#333',
+            border: '1px solid #555',
+            color: '#fff',
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          ⚙️ Settings
+        </button>
+      </div>
       
       {/* Cache Testing Section */}
       <div className="test-section" style={{ marginBottom: "2rem", padding: "1rem", border: "2px dashed #666", borderRadius: "8px" }}>
@@ -223,6 +280,75 @@ function App() {
         </p>
       </div>
       
+      {/* Performance Dashboard */}
+      <div style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "#1a1a1a", borderRadius: "8px", border: "1px solid #333" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <h3>🚀 Performance Metrics</h3>
+          <div>
+            <button onClick={loadPerfStats} style={{ marginRight: "0.5rem", padding: "0.5rem 1rem" }}>
+              Load Stats
+            </button>
+            <button onClick={resetPerfStats} style={{ padding: "0.5rem 1rem" }}>
+              Reset
+            </button>
+          </div>
+        </div>
+        
+        {perfStats && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            {/* Backend Stats */}
+            <div style={{ padding: "1rem", backgroundColor: "#222", borderRadius: "4px" }}>
+              <h4 style={{ marginTop: 0 }}>Backend Performance</h4>
+              {perfStats.backend.count > 0 ? (
+                <>
+                  <p>📊 Total Lookups: {perfStats.backend.count}</p>
+                  <p>⚡ Average Time: {perfStats.backend.avg_total_ms.toFixed(2)}ms</p>
+                  <p>🏃 Min/Max: {perfStats.backend.min_total_ms.toFixed(2)}ms / {perfStats.backend.max_total_ms.toFixed(2)}ms</p>
+                  <p>📈 P95: {perfStats.backend.p95_total_ms.toFixed(2)}ms</p>
+                  <p>💾 Cache Hit Rate: {perfStats.backend.cache_hit_rate.toFixed(1)}%</p>
+                  <hr style={{ margin: "0.5rem 0", opacity: 0.3 }} />
+                  <p style={{ fontSize: "0.9rem" }}>Breakdown:</p>
+                  <ul style={{ listStyle: "none", paddingLeft: "1rem", fontSize: "0.9rem" }}>
+                    <li>• Text Capture: {perfStats.backend.breakdown.text_capture_ms.toFixed(2)}ms</li>
+                    <li>• Cache Lookup: {perfStats.backend.breakdown.cache_lookup_ms.toFixed(2)}ms</li>
+                    <li>• API Call: {perfStats.backend.breakdown.api_call_ms.toFixed(2)}ms</li>
+                  </ul>
+                </>
+              ) : (
+                <p style={{ color: "#666" }}>No data yet. Try some lookups!</p>
+              )}
+            </div>
+            
+            {/* Frontend Stats */}
+            <div style={{ padding: "1rem", backgroundColor: "#222", borderRadius: "4px" }}>
+              <h4 style={{ marginTop: 0 }}>Frontend Performance</h4>
+              {perfStats.frontend.count > 0 ? (
+                <>
+                  <p>📊 Total Renders: {perfStats.frontend.count}</p>
+                  <p>⚡ Average E2E: {perfStats.frontend.avgTotal.toFixed(2)}ms</p>
+                  <p>🏃 Min/Max: {perfStats.frontend.minTotal.toFixed(2)}ms / {perfStats.frontend.maxTotal.toFixed(2)}ms</p>
+                  <p>📈 P95: {perfStats.frontend.p95Total.toFixed(2)}ms</p>
+                  <p style={{ 
+                    color: perfStats.frontend.avgTotal < 50 ? "#4CAF50" : "#FF9800",
+                    fontWeight: "bold",
+                    marginTop: "0.5rem"
+                  }}>
+                    {perfStats.frontend.avgTotal < 50 ? "✅ Meeting <50ms target!" : "⚠️ Above 50ms target"}
+                  </p>
+                  <hr style={{ margin: "0.5rem 0", opacity: 0.3 }} />
+                  <p style={{ fontSize: "0.9rem" }}>Breakdown:</p>
+                  <ul style={{ listStyle: "none", paddingLeft: "1rem", fontSize: "0.9rem" }}>
+                    <li>• Rendering: {perfStats.frontend.breakdown.rendering.toFixed(2)}ms</li>
+                  </ul>
+                </>
+              ) : (
+                <p style={{ color: "#666" }}>No data yet. Try some lookups!</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Instructions */}
       <div style={{ marginTop: "2rem", padding: "1rem", backgroundColor: "#f0f0f0", borderRadius: "8px", color: "#333" }}>
         <h4>📝 Testing Instructions:</h4>
@@ -233,6 +359,9 @@ function App() {
           <li>Note: Cache is empty until you add test data</li>
         </ol>
       </div>
+
+      {/* Settings Modal */}
+      <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 }
