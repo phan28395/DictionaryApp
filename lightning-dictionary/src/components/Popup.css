@@ -187,3 +187,39 @@
     color: #666;
   }
 }
+
+/* Error container styles */
+.error-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.error-message {
+  margin-top: 20px;
+  padding: 15px;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+}
+
+.error-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.error-message p {
+  margin: 10px 0 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Dark mode error styles */
+@media (prefers-color-scheme: dark) {
+  .error-message {
+    background: #4a1f1f;
+    border-color: #7a3f3f;
+    color: #ffaaaa;
+  }
+}

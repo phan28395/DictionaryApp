@@ -11,6 +11,12 @@ interface Definition {
   frequency?: number;
 }
 
+interface LookupResult {
+  success: boolean;
+  data?: Definition;
+  error?: string;
+}
+
 interface CacheEvent {
   word: string;
   definition: Definition | null;
@@ -26,6 +32,8 @@ function App() {
   const [lookupTime, setLookupTime] = useState<number | null>(null);
   const [fromCache, setFromCache] = useState<boolean | null>(null);
   const [testWord, setTestWord] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Listen for word definition events from cache
@@ -91,20 +99,33 @@ function App() {
   const testCacheLookup = async () => {
     if (!testWord.trim()) return;
     
+    setError(null);
+    setIsLoading(true);
+    
     try {
       const start = performance.now();
-      const result = await invoke<Definition | null>("lookup_word", { word: testWord });
+      const result = await invoke<LookupResult>("lookup_word", { word: testWord });
       const time = performance.now() - start;
       
-      setWord(testWord);
-      setDefinition(result);
-      setLookupTime(time);
-      setFromCache(result !== null);
+      if (result.success && result.data) {
+        setWord(testWord);
+        setDefinition(result.data);
+        setLookupTime(time);
+        setFromCache(true); // Will be determined by cache stats
+        setError(null);
+      } else {
+        setDefinition(null);
+        setError(result.error || "Word not found");
+      }
       
       // Reload cache stats
       await loadCacheStats();
     } catch (error) {
       console.error("Lookup error:", error);
+      setError("Failed to connect to dictionary service");
+      setDefinition(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -124,8 +145,8 @@ function App() {
             style={{ flex: 1, padding: "0.5rem" }}
             onKeyDown={(e) => e.key === "Enter" && testCacheLookup()}
           />
-          <button onClick={testCacheLookup} style={{ padding: "0.5rem 1rem" }}>
-            Test Lookup
+          <button onClick={testCacheLookup} disabled={isLoading} style={{ padding: "0.5rem 1rem" }}>
+            {isLoading ? "Loading..." : "Test Lookup"}
           </button>
           <button onClick={loadCacheStats} style={{ padding: "0.5rem 1rem" }}>
             Refresh Stats
@@ -147,7 +168,16 @@ function App() {
       {word && (
         <div className="definition-card">
           <h2 className="word">{word}</h2>
-          {definition ? (
+          {error ? (
+            <div style={{ color: "#e74c3c", padding: "1rem", textAlign: "center" }}>
+              <p>⚠️ {error}</p>
+              {error.includes("internet") && (
+                <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                  Please check your connection and try again.
+                </p>
+              )}
+            </div>
+          ) : definition ? (
             <>
               <p className="part-of-speech">{definition.pos}</p>
               {definition.pronunciation && (
@@ -159,12 +189,14 @@ function App() {
                 ))}
               </ul>
             </>
+          ) : isLoading ? (
+            <p className="definition">Loading...</p>
           ) : (
             <p className="definition">No definition in cache (cache miss)</p>
           )}
           
           {/* Performance Metrics */}
-          {lookupTime !== null && (
+          {lookupTime !== null && !error && (
             <div style={{ marginTop: "1rem", fontSize: "0.8rem", color: "#666" }}>
               <p>⏱️ Lookup time: {lookupTime.toFixed(2)}ms</p>
               <p>💾 Source: {fromCache ? "Cache (HIT)" : "Not in cache (MISS)"}</p>

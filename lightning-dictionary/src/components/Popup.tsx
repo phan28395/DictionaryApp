@@ -18,10 +18,18 @@ interface CacheEvent {
   lookup_time_ms: number;
 }
 
+interface ErrorEvent {
+  word: string;
+  error: string;
+  lookup_time_ms: number;
+}
+
 export const Popup: React.FC = React.memo(() => {
   const [definition, setDefinition] = useState<Definition | null>(null);
   const [lookupTime, setLookupTime] = useState<number | null>(null);
   const [fromCache, setFromCache] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [word, setWord] = useState<string>("");
 
   useEffect(() => {
     performance.mark('popup-component-mounted');
@@ -33,14 +41,26 @@ export const Popup: React.FC = React.memo(() => {
       performance.mark('definition-received');
       console.log("Word definition received:", event.payload);
       const data = event.payload;
+      setWord(data.word);
       setDefinition(data.definition);
       setFromCache(data.from_cache);
       setLookupTime(data.lookup_time_ms);
+      setError(null);
       
       // Measure time from mount to definition display
       performance.measure('popup-time', 'popup-component-mounted', 'definition-received');
       const measure = performance.getEntriesByName('popup-time')[0];
       console.log(`Popup render time: ${measure.duration}ms`);
+    });
+    
+    // Listen for word lookup errors
+    const unlistenError = listen<ErrorEvent>("word-lookup-error", (event) => {
+      console.log("Word lookup error:", event.payload);
+      const data = event.payload;
+      setWord(data.word);
+      setError(data.error);
+      setDefinition(null);
+      setLookupTime(data.lookup_time_ms);
     });
 
     // Listen for escape key to close
@@ -75,12 +95,34 @@ export const Popup: React.FC = React.memo(() => {
 
     return () => {
       unlistenDefinition.then(fn => fn());
+      unlistenError.then(fn => fn());
       document.removeEventListener('keydown', handleKeydown);
       document.removeEventListener('click', handleClickOutside);
       clearTimeout(autoCloseTimer);
     };
   }, []);
 
+  if (error) {
+    return (
+      <div className="popup-container">
+        <button 
+          className="close-button" 
+          onClick={() => getCurrentWindow().close()}
+          title="Close (Esc)"
+        >
+          ✕
+        </button>
+        <div className="error-container">
+          <h2 className="word">{word}</h2>
+          <div className="error-message">
+            <span className="error-icon">⚠️</span>
+            <p>{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   if (!definition) {
     return (
       <div className="popup-container">

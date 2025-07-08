@@ -2,7 +2,7 @@ use tauri::{AppHandle, Manager, Runtime, Emitter, WebviewUrl, WebviewWindowBuild
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use arboard::Clipboard;
 use std::sync::{Arc, Mutex};
-use crate::cache::ThreadSafeCache;
+use crate::dictionary::DictionaryService;
 use serde_json;
 
 pub struct HotkeyManager {
@@ -11,11 +11,11 @@ pub struct HotkeyManager {
 }
 
 impl HotkeyManager {
-    pub fn setup<R: Runtime>(app: &tauri::App<R>, cache: ThreadSafeCache) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn setup<R: Runtime>(app: &tauri::App<R>, dictionary_service: Arc<DictionaryService>) -> Result<(), Box<dyn std::error::Error>> {
         let app_handle = app.handle().clone();
         
         // Try to register global shortcuts using the official plugin
-        match register_shortcuts(&app_handle, cache.clone()) {
+        match register_shortcuts(&app_handle, dictionary_service.clone()) {
             Ok(_) => {
                 println!("✓ Global shortcuts registered successfully");
                 if std::env::var("XDG_SESSION_TYPE").unwrap_or_default() == "wayland" {
@@ -25,7 +25,7 @@ impl HotkeyManager {
                     
                     // Start clipboard monitoring as fallback
                     if let Ok(monitor) = ClipboardMonitor::new() {
-                        monitor.start_monitoring(app_handle.clone(), cache.clone());
+                        monitor.start_monitoring(app_handle.clone(), dictionary_service.clone());
                         println!("✓ Started clipboard monitoring for Wayland");
                     }
                 }
@@ -37,7 +37,7 @@ impl HotkeyManager {
                 
                 // Start clipboard monitoring as fallback
                 if let Ok(monitor) = ClipboardMonitor::new() {
-                    monitor.start_monitoring(app_handle.clone(), cache.clone());
+                    monitor.start_monitoring(app_handle.clone(), dictionary_service.clone());
                     println!("✓ Started clipboard monitoring as fallback");
                 }
             }
@@ -47,24 +47,24 @@ impl HotkeyManager {
     }
 }
 
-fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) -> Result<(), Box<dyn std::error::Error>> {
+fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, dictionary_service: Arc<DictionaryService>) -> Result<(), Box<dyn std::error::Error>> {
     // Register Alt+J
     let shortcut1 = Shortcut::new(Some(Modifiers::ALT), Code::KeyJ);
-    let cache1 = cache.clone();
+    let dict_service1 = dictionary_service.clone();
     app.global_shortcut().on_shortcut(shortcut1.clone(), move |app, _shortcut, event| {
         if event.state == ShortcutState::Pressed {
             println!("Alt+J pressed!");
-            handle_hotkey_press(app, cache1.clone());
+            handle_hotkey_press(app, dict_service1.clone());
         }
     })?;
     
     // Register Ctrl+Shift+D as fallback
     let shortcut2 = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyD);
-    let cache2 = cache.clone();
+    let dict_service2 = dictionary_service.clone();
     app.global_shortcut().on_shortcut(shortcut2.clone(), move |app, _shortcut, event| {
         if event.state == ShortcutState::Pressed {
             println!("Ctrl+Shift+D pressed!");
-            handle_hotkey_press(app, cache2.clone());
+            handle_hotkey_press(app, dict_service2.clone());
         }
     })?;
     
@@ -73,7 +73,7 @@ fn register_shortcuts<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) ->
     Ok(())
 }
 
-fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) {
+fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, dictionary_service: Arc<DictionaryService>) {
     let start_time = std::time::Instant::now();
     
     // Create or show popup window
@@ -84,28 +84,29 @@ fn handle_hotkey_press<R: Runtime>(app: &AppHandle<R>, cache: ThreadSafeCache) {
         Ok(text) if !text.is_empty() => {
             println!("Selected text: {}", text);
             
-            // Check cache first
-            let mut cache_guard = cache.lock().unwrap();
-            if let Some(definition) = cache_guard.get(&text) {
-                let lookup_time = start_time.elapsed();
-                println!("Cache hit! Lookup time: {:?}", lookup_time);
-                
-                // Emit definition with timing info
-                let _ = app.emit("word-definition", serde_json::json!({
-                    "word": text,
-                    "definition": definition,
-                    "from_cache": true,
-                    "lookup_time_ms": lookup_time.as_millis()
-                }));
-            } else {
-                println!("Cache miss for word: {}", text);
-                // For now, emit that we need to fetch from API
-                let _ = app.emit("word-definition", serde_json::json!({
-                    "word": text,
-                    "definition": null,
-                    "from_cache": false,
-                    "lookup_time_ms": start_time.elapsed().as_millis()
-                }));
+            // Look up word using dictionary service (cache + API fallback)
+            match dictionary_service.lookup_word(&text) {
+                Ok(definition) => {
+                    let lookup_time = start_time.elapsed();
+                    println!("Word found! Lookup time: {:?}", lookup_time);
+                    
+                    // Emit definition with timing info
+                    let _ = app.emit("word-definition", serde_json::json!({
+                        "word": text,
+                        "definition": definition,
+                        "from_cache": lookup_time.as_millis() < 5, // Assume cache hit if < 5ms
+                        "lookup_time_ms": lookup_time.as_millis()
+                    }));
+                },
+                Err(e) => {
+                    println!("Error looking up word '{}': {}", text, e);
+                    // Emit error event
+                    let _ = app.emit("word-lookup-error", serde_json::json!({
+                        "word": text,
+                        "error": e.user_message(),
+                        "lookup_time_ms": start_time.elapsed().as_millis()
+                    }));
+                }
             }
         }
         Ok(_) => {
@@ -163,7 +164,7 @@ impl ClipboardMonitor {
         })
     }
     
-    pub fn start_monitoring<R: Runtime>(&self, app_handle: AppHandle<R>, cache: ThreadSafeCache) {
+    pub fn start_monitoring<R: Runtime>(&self, app_handle: AppHandle<R>, dictionary_service: Arc<DictionaryService>) {
         let clipboard = self.clipboard.clone();
         let last_content = self.last_content.clone();
         
@@ -195,24 +196,25 @@ impl ClipboardMonitor {
                                 // Create popup window first
                                 create_popup_window(&app_handle);
                                 
-                                // Check cache
-                                let mut cache_guard = cache.lock().unwrap();
-                                if let Some(definition) = cache_guard.get(&current) {
-                                    println!("Cache hit for clipboard word!");
-                                    let _ = app_handle.emit("word-definition", serde_json::json!({
-                                        "word": current,
-                                        "definition": definition,
-                                        "from_cache": true,
-                                        "lookup_time_ms": 0
-                                    }));
-                                } else {
-                                    println!("Cache miss for clipboard word: {}", current);
-                                    let _ = app_handle.emit("word-definition", serde_json::json!({
-                                        "word": current,
-                                        "definition": null,
-                                        "from_cache": false,
-                                        "lookup_time_ms": 0
-                                    }));
+                                // Look up word using dictionary service
+                                match dictionary_service.lookup_word(&current) {
+                                    Ok(definition) => {
+                                        println!("Found definition for clipboard word!");
+                                        let _ = app_handle.emit("word-definition", serde_json::json!({
+                                            "word": current,
+                                            "definition": definition,
+                                            "from_cache": true, // We'll assume cache hit for clipboard
+                                            "lookup_time_ms": 0
+                                        }));
+                                    },
+                                    Err(e) => {
+                                        println!("Error looking up clipboard word '{}': {}", current, e);
+                                        let _ = app_handle.emit("word-lookup-error", serde_json::json!({
+                                            "word": current,
+                                            "error": e.user_message(),
+                                            "lookup_time_ms": 0
+                                        }));
+                                    }
                                 }
                             } else {
                                 println!("Not a single word, ignoring");
