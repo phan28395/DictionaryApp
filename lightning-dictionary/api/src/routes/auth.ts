@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { authService } from '../services/auth';
 import { CreateUserDto, LoginDto, UserPreferences } from '../types/auth';
 import { authenticate } from '../middleware/auth';
+import { PreferencesService } from '../services/preferences';
 
 interface RegisterRequest {
   Body: CreateUserDto;
@@ -13,6 +14,20 @@ interface LoginRequest {
 
 interface UpdatePreferencesRequest {
   Body: Partial<UserPreferences>;
+}
+
+interface ImportPreferencesRequest {
+  Body: {
+    data: any;
+    mergeWithExisting?: boolean;
+    importHistory?: boolean;
+  };
+}
+
+interface ExportPreferencesQuery {
+  Querystring: {
+    includeHistory?: boolean;
+  };
 }
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -97,6 +112,61 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.send({ history });
     } catch (error: any) {
       return reply.status(500).send({ error: 'Failed to get history' });
+    }
+  });
+  
+  // Reset preferences to defaults
+  fastify.post('/preferences/reset', { preHandler: authenticate }, async (request, reply) => {
+    try {
+      const preferences = await PreferencesService.resetUserPreferences(request.user!.userId);
+      
+      return reply.send({ preferences });
+    } catch (error: any) {
+      return reply.status(500).send({ error: 'Failed to reset preferences' });
+    }
+  });
+  
+  // Export user data (preferences and optionally history)
+  fastify.get<ExportPreferencesQuery>('/export', { preHandler: authenticate }, async (request, reply) => {
+    try {
+      const includeHistory = request.query.includeHistory === 'true';
+      const exportData = await PreferencesService.exportUserData(request.user!.userId, includeHistory);
+      
+      return reply.send(exportData);
+    } catch (error: any) {
+      return reply.status(500).send({ error: 'Failed to export user data' });
+    }
+  });
+  
+  // Import user preferences
+  fastify.post<ImportPreferencesRequest>('/import', { preHandler: authenticate }, async (request, reply) => {
+    try {
+      await PreferencesService.importUserPreferences(
+        request.user!.userId,
+        request.body.data,
+        {
+          mergeWithExisting: request.body.mergeWithExisting,
+          importHistory: request.body.importHistory,
+        }
+      );
+      
+      // Return updated preferences
+      const preferences = await PreferencesService.getUserPreferences(request.user!.userId);
+      
+      return reply.send({ preferences });
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message || 'Failed to import preferences' });
+    }
+  });
+  
+  // Get preference statistics (admin endpoint - could be protected with admin role)
+  fastify.get('/preferences/stats', async (request, reply) => {
+    try {
+      const stats = await PreferencesService.getPreferenceStats();
+      
+      return reply.send({ stats });
+    } catch (error: any) {
+      return reply.status(500).send({ error: 'Failed to get preference statistics' });
     }
   });
 }

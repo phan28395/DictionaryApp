@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import db from '../database/db';
 import { User, CreateUserDto, LoginDto, Session, JWTPayload, AuthResponse, UserPreferences } from '../types/auth';
+import { PreferencesService } from './preferences';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -154,26 +155,17 @@ export class AuthService {
   }
   
   async updateUserPreferences(userId: number, preferences: Partial<UserPreferences>): Promise<User> {
+    // Use PreferencesService which includes validation
+    const updatedPreferences = await PreferencesService.updateUserPreferences(userId, preferences);
+    
     const user = await db('users').where('id', userId).first();
     if (!user) {
       throw new Error('User not found');
     }
     
-    const currentPreferences = JSON.parse(user.preferences);
-    const updatedPreferences = { ...currentPreferences, ...preferences };
-    
-    await db('users')
-      .where('id', userId)
-      .update({
-        preferences: JSON.stringify(updatedPreferences),
-        updated_at: new Date()
-      });
-    
-    const updatedUser = await db('users').where('id', userId).first();
-    updatedUser.preferences = JSON.parse(updatedUser.preferences);
-    delete updatedUser.password_hash;
-    
-    return updatedUser;
+    user.preferences = updatedPreferences;
+    delete user.password_hash;
+    return user;
   }
   
   async addToHistory(userId: number, word: string): Promise<void> {
