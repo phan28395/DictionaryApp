@@ -8,6 +8,7 @@ import {
   AIProviderConfig 
 } from '../types/ai-context';
 import { optionalAuthenticate } from '../middleware/auth';
+import { aiBatchRoutes } from './ai-batch';
 
 const aiService = new AIService();
 
@@ -22,6 +23,8 @@ const aiService = new AIService();
 })();
 
 export async function aiRoutes(server: FastifyInstance) {
+  // Register batch routes under /batch prefix
+  await server.register(aiBatchRoutes);
   /**
    * GET /api/v1/ai/status
    * Check AI service status
