@@ -1,0 +1,11 @@
+{
+  "shortcuts": {
+    "openDictionary": "Ctrl+Shift+D",
+    "searchFocus": "Ctrl+K",
+    "historyBack": "Alt+Left",
+    "historyForward": "Alt+Right",
+    "settings": "Ctrl+,",
+    "close": "Ctrl+Q"
+  },
+  "platform": "Linux"
+}

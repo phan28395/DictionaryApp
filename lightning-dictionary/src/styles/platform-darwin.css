@@ -1,0 +1,61 @@
+/* macOS specific styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Adjust for macOS traffic lights */
+.window-controls {
+  padding-left: 70px;
+}
+
+/* Better scrollbar for macOS */
+::-webkit-scrollbar {
+  width: 8px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* macOS style buttons */
+button {
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Vibrancy effect for panels */
+.popup,
+.settings-panel,
+.history-panel {
+  backdrop-filter: blur(20px);
+  background-color: rgba(30, 30, 30, 0.8);
+}
+
+/* macOS style focus rings */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(0, 125, 250, 0.6);
+  outline-offset: 1px;
+}
+
+/* Reduce motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

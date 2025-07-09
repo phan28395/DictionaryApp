@@ -1,5 +1,6 @@
 import React from 'react';
 import './NavigationControls.css';
+import { getPlatformShortcuts, formatShortcut } from '../utils/platform';
 
 interface NavigationControlsProps {
   canGoBack: boolean;
@@ -8,6 +9,8 @@ interface NavigationControlsProps {
   onForward: () => void;
   currentWord?: string;
 }
+
+const shortcuts = getPlatformShortcuts();
 
 export const NavigationControls = React.memo<NavigationControlsProps>(({
   canGoBack,
@@ -23,7 +26,7 @@ export const NavigationControls = React.memo<NavigationControlsProps>(({
         onClick={onBack}
         disabled={!canGoBack}
         aria-label="Go back to previous word"
-        title="Previous word (Alt+Left)"
+        title={`Previous word (${formatShortcut(shortcuts.historyBack)})`}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M10 13L5 8L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -35,7 +38,7 @@ export const NavigationControls = React.memo<NavigationControlsProps>(({
         onClick={onForward}
         disabled={!canGoForward}
         aria-label="Go forward to next word"
-        title="Next word (Alt+Right)"
+        title={`Next word (${formatShortcut(shortcuts.historyForward)})`}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 13L11 8L6 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

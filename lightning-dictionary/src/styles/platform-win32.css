@@ -1,0 +1,121 @@
+/* Windows specific styles */
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Windows-style scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border: 1px solid #d3d3d3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border: 1px solid #777;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #333;
+}
+
+/* Windows style buttons */
+button {
+  border: 1px solid #8b8b8b;
+  background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+  color: #333;
+  transition: all 0.1s ease;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+  border-color: #707070;
+}
+
+button:active:not(:disabled) {
+  background: linear-gradient(to bottom, #d8d8d8, #e8e8e8);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Windows style inputs */
+input,
+textarea {
+  border: 1px solid #8b8b8b;
+  padding: 6px 8px;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #0078d4;
+  outline: 2px solid rgba(0, 120, 212, 0.3);
+  outline-offset: -2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  button,
+  input,
+  textarea,
+  .popup,
+  .settings-panel {
+    border: 2px solid currentColor !important;
+  }
+  
+  button:focus,
+  input:focus,
+  textarea:focus {
+    outline: 3px solid currentColor !important;
+    outline-offset: 1px !important;
+  }
+}
+
+/* Windows snap layout indicator */
+.window-snap-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #0078d4;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.window-snap-indicator.active {
+  opacity: 1;
+}
+
+/* Fluent design effects */
+.acrylic-material {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px) saturate(125%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .acrylic-material {
+    background: rgba(32, 32, 32, 0.8);
+  }
+  
+  button {
+    background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+    color: #fff;
+    border-color: #555;
+  }
+  
+  button:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #4a4a4a, #3a3a3a);
+    border-color: #666;
+  }
+}

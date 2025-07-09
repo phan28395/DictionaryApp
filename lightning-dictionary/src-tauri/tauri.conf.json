@@ -16,6 +16,10 @@
         "title": "Lightning Dictionary",
         "width": 800,
         "height": 600,
+        "minWidth": 400,
+        "minHeight": 300,
+        "decorations": true,
+        "resizable": true,
         "url": "/index.html"
       }
     ],

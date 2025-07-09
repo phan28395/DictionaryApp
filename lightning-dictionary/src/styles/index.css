@@ -1,0 +1,15 @@
+/* Platform-specific style imports */
+/* These need to be imported separately to avoid CSS import order issues */
+
+/* Load platform-specific styles based on platform class added by JavaScript */
+.platform-linux {
+  @import './platform-linux.css';
+}
+
+.platform-darwin {
+  @import './platform-darwin.css';
+}
+
+.platform-windows {
+  @import './platform-win32.css';
+}

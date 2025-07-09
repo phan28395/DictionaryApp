@@ -8,6 +8,8 @@ import { WordHistory } from "./components/WordHistory";
 import { PerformanceMonitor } from "./components/PerformanceMonitor";
 import { SearchBox } from "./components/SearchBox";
 import { historyManager } from "./utils/history-manager";
+import { applyPlatformStyles } from "./utils/platform";
+import { PlatformTest } from "./components/PlatformTest";
 import "./App.css";
 
 interface Definition {
@@ -48,6 +50,9 @@ function App() {
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
 
   useEffect(() => {
+    // Apply platform-specific styles on startup
+    applyPlatformStyles();
+    
     // Listen for word definition events from cache
     const unlistenDefinition = listen<CacheEvent>("word-definition", (event) => {
       console.log("Word definition event:", event.payload);
@@ -265,6 +270,9 @@ function App() {
           📚 Test Multi-Definition
         </button>
       </div>
+      
+      {/* Platform Test Component */}
+      <PlatformTest />
       
       {/* Search Section */}
       <div className="test-section" style={{ marginBottom: "2rem", padding: "1rem", border: "2px dashed #666", borderRadius: "8px" }}>

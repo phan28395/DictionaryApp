@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { prefetchEngine } from '../utils/prefetch-engine';
 import type { WorkerMessage, WorkerResponse } from '../workers/prefetch.worker';
 

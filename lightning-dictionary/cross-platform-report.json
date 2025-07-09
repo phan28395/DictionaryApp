@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-07-09T12:45:59.212Z",
+  "platform": "Linux",
+  "platformVersion": "6.14.0-63.fc42.x86_64",
+  "nodeVersion": "v22.17.0",
+  "issues": [
+    "Linux: Consider setting custom window decorations for better integration",
+    "Missing minimum window size constraints"
+  ],
+  "recommendations": [
+    {
+      "platform": "Linux",
+      "fix": "Add \"decorations\": true to window config for native decorations"
+    },
+    {
+      "platform": "Linux",
+      "fix": "Linux: Test with different window managers (GNOME, KDE, XFCE)"
+    },
+    {
+      "platform": "Linux",
+      "fix": "Linux: Verify system tray icon works across distros"
+    },
+    {
+      "platform": "All",
+      "fix": "Add minWidth: 400, minHeight: 300 to prevent UI breaking"
+    },
+    {
+      "platform": "Linux",
+      "category": "Accessibility",
+      "fix": "Test with Orca screen reader"
+    },
+    {
+      "platform": "Linux",
+      "category": "Accessibility",
+      "fix": "Verify keyboard-only navigation"
+    }
+  ],
+  "generatedFiles": [
+    "src/styles/platform-linux.css",
+    "src/config/keyboard-shortcuts.json",
+    "src-tauri/tauri.conf.linux.json"
+  ]
+}
