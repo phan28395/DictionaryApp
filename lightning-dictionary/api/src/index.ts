@@ -6,6 +6,7 @@ import rateLimit from '@fastify/rate-limit';
 import { loadDictionary } from './services/dictionary';
 import { defineRoutes } from './routes';
 import { config } from './config';
+import { initDatabase, closeDatabase } from './database/init';
 
 const server = Fastify({
   logger: {
@@ -41,6 +42,10 @@ async function start() {
       max: 100,
       timeWindow: '1 minute',
     });
+    
+    // Initialize database
+    await initDatabase();
+    server.log.info('Database initialized successfully');
 
     // Load dictionary data into memory
     const startTime = Date.now();
@@ -69,6 +74,7 @@ signals.forEach((signal) => {
   process.on(signal, async () => {
     server.log.info(`Received ${signal}, shutting down gracefully`);
     await server.close();
+    await closeDatabase();
     process.exit(0);
   });
 });

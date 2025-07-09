@@ -36,4 +36,4 @@ coverage/
 .nyc_output/
 
 # TypeScript cache
-*.tsbuildinfo
+*.tsbuildinfodata/*.db

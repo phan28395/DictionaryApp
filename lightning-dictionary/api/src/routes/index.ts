@@ -3,8 +3,14 @@ import { getDefinition, searchWords, getDictionaryStats, getEnhancedDefinition, 
 import { ApiResponse, WordDefinition, SearchResult } from '../types/dictionary';
 import { MultiDefinitionResponse, EnhancedWordDefinition } from '../types/enhanced-dictionary';
 import { config } from '../config';
+import { authRoutes } from './auth';
+import { optionalAuthenticate } from '../middleware/auth';
+import { authService } from '../services/auth';
 
 export async function defineRoutes(server: FastifyInstance) {
+  // Register auth routes
+  await server.register(authRoutes, { prefix: '/api/v1/auth' });
+  
   // Health check endpoint
   server.get('/health', async () => {
     const stats = getDictionaryStats();
@@ -111,7 +117,7 @@ export async function defineRoutes(server: FastifyInstance) {
   // Enhanced definition endpoint with multi-definition support
   server.get<{
     Params: { word: string };
-  }>('/api/v1/define/enhanced/:word', async (request, reply) => {
+  }>('/api/v1/define/enhanced/:word', { preHandler: optionalAuthenticate }, async (request, reply) => {
     const { word } = request.params;
     
     if (!word || word.trim().length === 0) {
@@ -136,6 +142,16 @@ export async function defineRoutes(server: FastifyInstance) {
         timestamp: Date.now(),
       };
       return response;
+    }
+    
+    // Track user history if authenticated
+    if (request.user) {
+      try {
+        await authService.addToHistory(request.user.userId, word);
+      } catch (error) {
+        // Log error but don't fail the request
+        request.log.error('Failed to track user history:', error);
+      }
     }
 
     // Set cache headers for performance
