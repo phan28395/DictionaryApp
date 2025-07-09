@@ -7,6 +7,8 @@ import {
   convertLegacyToEnhanced,
   LegacyWordDefinition
 } from '../types/enhanced-dictionary';
+import { usePrefetch } from './usePrefetch';
+import { useSettings } from './useSettings';
 
 interface UseDefinitionsOptions {
   useMockData?: boolean;
@@ -30,6 +32,14 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
   const [definition, setDefinition] = useState<EnhancedWordDefinition | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use settings for prefetch configuration
+  const { settings } = useSettings();
+  const { trackWordLookup } = usePrefetch({
+    enabled: settings.cache.enablePrefetch ?? true,
+    priority: settings.cache.prefetchPriority ?? 'medium',
+    useWorker: settings.cache.prefetchUseWorker ?? false
+  });
 
   const lookupWord = useCallback(async (word: string) => {
     if (!word) {
@@ -43,8 +53,12 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
     try {
       // Check cache first
       if (cacheResults && definitionCache.has(word.toLowerCase())) {
-        setDefinition(definitionCache.get(word.toLowerCase())!);
+        const cachedDef = definitionCache.get(word.toLowerCase())!;
+        setDefinition(cachedDef);
         setIsLoading(false);
+        
+        // Track lookup for prefetch patterns
+        trackWordLookup(word, cachedDef);
         return;
       }
 
@@ -56,6 +70,9 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
         }
         setDefinition(mockDef);
         setIsLoading(false);
+        
+        // Track lookup for prefetch patterns
+        trackWordLookup(word, mockDef);
         return;
       }
 
@@ -68,6 +85,9 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
             definitionCache.set(word.toLowerCase(), response.data);
           }
           setDefinition(response.data);
+          
+          // Track lookup for prefetch patterns
+          trackWordLookup(word, response.data);
         } else {
           // Fallback to legacy format
           const legacyResponse = await invoke<any>('lookup_word', { word });
@@ -117,7 +137,7 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
     } finally {
       setIsLoading(false);
     }
-  }, [useMockData, cacheResults]);
+  }, [useMockData, cacheResults, trackWordLookup]);
 
   const clearError = useCallback(() => {
     setError(null);

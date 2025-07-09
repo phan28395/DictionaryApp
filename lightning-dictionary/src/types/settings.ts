@@ -19,6 +19,9 @@ export interface AppSettings {
     maxSize: number;
     clearOnExit: boolean;
     preloadCommon: boolean;
+    enablePrefetch?: boolean;
+    prefetchPriority?: 'low' | 'medium' | 'high';
+    prefetchUseWorker?: boolean;
   };
   
   // Behavior settings
@@ -54,7 +57,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   cache: {
     maxSize: 10000,
     clearOnExit: false,
-    preloadCommon: true
+    preloadCommon: true,
+    enablePrefetch: true,
+    prefetchPriority: 'medium',
+    prefetchUseWorker: false
   },
   behavior: {
     closeOnClickOutside: true,

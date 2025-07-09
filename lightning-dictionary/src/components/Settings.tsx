@@ -282,7 +282,7 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
                 Clear cache on exit
               </label>
 
-              <label style={{ display: 'flex', alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <input
                   type="checkbox"
                   checked={settings.cache.preloadCommon}
@@ -291,6 +291,59 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
                 />
                 Preload common words on startup
               </label>
+
+              <h3>Intelligent Prefetch</h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.cache.enablePrefetch ?? true}
+                  onChange={(e) => updateSettings('cache', { enablePrefetch: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Enable intelligent word prefetching
+              </label>
+
+              <div style={{ opacity: settings.cache.enablePrefetch ?? true ? 1 : 0.5 }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    Prefetch aggressiveness:
+                  </label>
+                  <select
+                    value={settings.cache.prefetchPriority ?? 'medium'}
+                    onChange={(e) => updateSettings('cache', { prefetchPriority: e.target.value as any })}
+                    disabled={!(settings.cache.enablePrefetch ?? true)}
+                    style={{
+                      width: '200px',
+                      padding: '0.5rem',
+                      background: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
+                      color: '#fff'
+                    }}
+                  >
+                    <option value="low">Conservative (fewer prefetches)</option>
+                    <option value="medium">Balanced</option>
+                    <option value="high">Aggressive (more prefetches)</option>
+                  </select>
+                </div>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.cache.prefetchUseWorker ?? false}
+                    onChange={(e) => updateSettings('cache', { prefetchUseWorker: e.target.checked })}
+                    disabled={!(settings.cache.enablePrefetch ?? true)}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Use background worker for prefetch (experimental)
+                </label>
+
+                <p style={{ fontSize: '0.875rem', color: '#888', marginTop: '0.5rem' }}>
+                  Prefetch learns from your lookup patterns to predict and cache words you're likely to need next, 
+                  improving response time.
+                </p>
+              </div>
             </div>
           )}
 

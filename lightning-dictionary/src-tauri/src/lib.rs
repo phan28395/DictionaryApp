@@ -5,6 +5,7 @@ mod dictionary;
 mod error;
 mod performance;
 mod settings;
+mod prefetch;
 
 #[cfg(test)]
 mod cache_benchmark;
@@ -14,6 +15,7 @@ use cache::{create_cache, ThreadSafeCache, Definition};
 use dictionary::DictionaryService;
 use performance::{PERF_TRACKER, PerformanceStats};
 use settings::{get_settings, save_settings};
+use prefetch::{PrefetchManager, queue_prefetch, get_prefetch_stats, clear_prefetch_queue};
 use std::sync::Arc;
 use serde::Serialize;
 use tauri::Manager;
@@ -90,6 +92,7 @@ fn reset_performance_stats() {
 struct AppState {
     cache: ThreadSafeCache,
     dictionary_service: Arc<DictionaryService>,
+    prefetch_manager: Arc<PrefetchManager>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -108,16 +111,28 @@ pub fn run() {
         .unwrap_or_else(|_| "http://localhost:3001".to_string());
     let dictionary_service = Arc::new(DictionaryService::new(cache.clone(), api_base_url));
     
+    // Create prefetch manager
+    let prefetch_manager = Arc::new(PrefetchManager::new(dictionary_service.clone()));
+    
+    // Start prefetch worker in the runtime
+    {
+        let prefetch_manager_clone = prefetch_manager.clone();
+        runtime.spawn(async move {
+            prefetch_manager_clone.start_prefetch_worker().await;
+        });
+    }
+    
     let app_state = AppState {
         cache: cache.clone(),
         dictionary_service,
+        prefetch_manager,
     };
     
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(app_state)
-        .invoke_handler(tauri::generate_handler![greet, lookup_word, cache_stats, search_words, get_performance_stats, reset_performance_stats, get_settings, save_settings])
+        .invoke_handler(tauri::generate_handler![greet, lookup_word, cache_stats, search_words, get_performance_stats, reset_performance_stats, get_settings, save_settings, queue_prefetch, get_prefetch_stats, clear_prefetch_queue])
         .setup(move |app| {
             // Get the app handle and then the state
             let handle = app.handle();
