@@ -1,0 +1,121 @@
+.search-box-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-box-form {
+  width: 100%;
+}
+
+.search-box-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--input-bg, #ffffff);
+  border: 2px solid var(--input-border, #e0e0e0);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.search-box-input-wrapper:focus-within {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  width: 20px;
+  height: 20px;
+  color: var(--icon-color, #999);
+  pointer-events: none;
+}
+
+.search-box-input {
+  flex: 1;
+  padding: 12px 48px 12px 48px;
+  font-size: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary, #333);
+  outline: none;
+  width: 100%;
+}
+
+.search-box-input::placeholder {
+  color: var(--placeholder-color, #999);
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--icon-color, #999);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.search-clear-button:hover {
+  background: var(--button-hover-bg, #f0f0f0);
+  color: var(--text-primary, #333);
+}
+
+.search-clear-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .search-box-input-wrapper {
+    background: var(--input-bg, #2a2a2a);
+    border-color: var(--input-border, #444);
+  }
+
+  .search-box-input-wrapper:focus-within {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+
+  .search-box-input {
+    color: var(--text-primary, #e0e0e0);
+  }
+
+  .search-clear-button:hover {
+    background: var(--button-hover-bg, #3a3a3a);
+    color: var(--text-primary, #e0e0e0);
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 640px) {
+  .search-box-container {
+    max-width: 100%;
+  }
+
+  .search-box-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 10px 44px 10px 44px;
+  }
+
+  .search-icon {
+    left: 12px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .search-clear-button {
+    right: 8px;
+    width: 28px;
+    height: 28px;
+  }
+}

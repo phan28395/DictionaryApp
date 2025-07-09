@@ -5,6 +5,7 @@ import { MultiDefinitionResponse, EnhancedWordDefinition } from '../types/enhanc
 import { config } from '../config';
 import { authRoutes } from './auth';
 import { historyRoutes } from './history';
+import { searchRoutes } from './search';
 import { optionalAuthenticate } from '../middleware/auth';
 import { authService } from '../services/auth';
 import cacheManager from '../utils/cache-manager';
@@ -16,6 +17,9 @@ export async function defineRoutes(server: FastifyInstance) {
   
   // Register history routes
   await server.register(historyRoutes, { prefix: '/api/v1' });
+  
+  // Register search routes
+  await server.register(searchRoutes, { prefix: '/api/v1/search' });
   
   // Health check endpoint
   server.get('/health', async () => {

@@ -6,6 +6,7 @@ import { Settings } from "./components/Settings";
 import { TestMultiDefinition } from "./components/TestMultiDefinition";
 import { WordHistory } from "./components/WordHistory";
 import { PerformanceMonitor } from "./components/PerformanceMonitor";
+import { SearchBox } from "./components/SearchBox";
 import { historyManager } from "./utils/history-manager";
 import "./App.css";
 
@@ -265,21 +266,66 @@ function App() {
         </button>
       </div>
       
-      {/* Cache Testing Section */}
+      {/* Search Section */}
       <div className="test-section" style={{ marginBottom: "2rem", padding: "1rem", border: "2px dashed #666", borderRadius: "8px" }}>
-        <h3>🧪 Cache Testing</h3>
-        <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-          <input
-            type="text"
-            value={testWord}
-            onChange={(e) => setTestWord(e.target.value)}
-            placeholder="Enter a word to test cache"
-            style={{ flex: 1, padding: "0.5rem" }}
-            onKeyDown={(e) => e.key === "Enter" && testCacheLookup()}
+        <h3>🔍 Dictionary Search</h3>
+        <div style={{ marginBottom: "1rem" }}>
+          <SearchBox
+            onSearch={async (query) => {
+              setTestWord(query);
+              await testCacheLookup();
+            }}
+            onSelectWord={async (selectedWord) => {
+              setTestWord(selectedWord);
+              // Use setTimeout to ensure state update happens first
+              setTimeout(() => {
+                const lookupWord = async () => {
+                  if (!selectedWord.trim()) return;
+                  
+                  setError(null);
+                  setIsLoading(true);
+                  
+                  try {
+                    const start = performance.now();
+                    const result = await invoke<LookupResult>("lookup_word", { word: selectedWord });
+                    const time = performance.now() - start;
+                    
+                    if (result.success && result.data) {
+                      setWord(selectedWord);
+                      setDefinition(result.data);
+                      setLookupTime(time);
+                      setFromCache(true);
+                      setError(null);
+                      
+                      // Track in history
+                      await historyManager.addEntry({
+                        word: selectedWord,
+                        timestamp: Date.now(),
+                        definition: result.data.definitions[0] || '',
+                        partOfSpeech: result.data.pos
+                      });
+                    } else {
+                      setDefinition(null);
+                      setError(result.error || "Word not found");
+                    }
+                    
+                    await loadCacheStats();
+                  } catch (error) {
+                    console.error("Lookup error:", error);
+                    setError("Failed to connect to dictionary service");
+                    setDefinition(null);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                };
+                lookupWord();
+              }, 0);
+            }}
+            placeholder="Search for a word..."
+            autoFocus={true}
           />
-          <button onClick={testCacheLookup} disabled={isLoading} style={{ padding: "0.5rem 1rem" }}>
-            {isLoading ? "Loading..." : "Test Lookup"}
-          </button>
+        </div>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
           <button onClick={loadCacheStats} style={{ padding: "0.5rem 1rem" }}>
             Refresh Stats
           </button>

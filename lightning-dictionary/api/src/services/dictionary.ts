@@ -4,6 +4,7 @@ import { DictionaryData, WordDefinition, SearchResult } from '../types/dictionar
 import { EnhancedWordDefinition, convertLegacyToEnhanced, generateMockDefinitions } from '../types/enhanced-dictionary';
 import { config } from '../config';
 import cacheManager, { Cacheable } from '../utils/cache-manager';
+import { initializeSearchService } from './search';
 
 let dictionaryData: DictionaryData | null = null;
 let wordIndex: Map<string, WordDefinition> = new Map();
@@ -30,6 +31,9 @@ export async function loadDictionary(): Promise<void> {
 
     // Sort search index for efficient prefix searching
     searchIndex.sort((a, b) => a.lowercase.localeCompare(b.lowercase));
+
+    // Initialize search service with word index
+    initializeSearchService(wordIndex);
 
     console.log(`Loaded ${wordIndex.size} words into memory`);
   } catch (error) {
