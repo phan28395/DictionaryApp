@@ -4,6 +4,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { performanceTracker } from "./utils/performance";
 import { Settings } from "./components/Settings";
 import { TestMultiDefinition } from "./components/TestMultiDefinition";
+import { WordHistory } from "./components/WordHistory";
+import { historyManager } from "./utils/history-manager";
 import "./App.css";
 
 interface Definition {
@@ -40,6 +42,7 @@ function App() {
   const [perfStats, setPerfStats] = useState<any>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showMultiDefTest, setShowMultiDefTest] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     // Listen for word definition events from cache
@@ -51,6 +54,15 @@ function App() {
       setDefinition(data.definition);
       setFromCache(data.from_cache);
       setLookupTime(data.lookup_time_ms);
+      
+      // Track in history
+      if (data.word && data.definition) {
+        historyManager.addEntry(
+          data.word,
+          undefined,
+          data.definition.definitions[0]
+        );
+      }
       
       // Mark render complete on next tick
       requestAnimationFrame(() => {
@@ -69,6 +81,15 @@ function App() {
       setWord(data.word);
       setDefinition(data.definition);
       setFromCache(data.from_cache);
+      
+      // Track in history
+      if (data.word && data.definition) {
+        historyManager.addEntry(
+          data.word,
+          "Clipboard lookup",
+          data.definition.definitions[0]
+        );
+      }
     });
 
     // Listen for no selection event
@@ -172,24 +193,44 @@ function App() {
     <div className="container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>⚡ Lightning Dictionary</h1>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="button-press color-transition"
-          style={{
-            background: '#333',
-            border: '1px solid #555',
-            color: '#fff',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '0.9rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          ⚙️ Settings
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setShowHistory(true)}
+            className="button-press color-transition"
+            style={{
+              background: '#333',
+              border: '1px solid #555',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            📚 History
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="button-press color-transition"
+            style={{
+              background: '#333',
+              border: '1px solid #555',
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            ⚙️ Settings
+          </button>
+        </div>
         <button 
           onClick={() => setShowMultiDefTest(!showMultiDefTest)}
           style={{
@@ -381,6 +422,71 @@ function App() {
 
       {/* Settings Modal */}
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      
+      {/* Word History */}
+      {showHistory && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            width: '90%',
+            maxWidth: '800px',
+            height: '80%',
+            maxHeight: '600px'
+          }}>
+            <WordHistory 
+              onWordClick={async (clickedWord) => {
+                setShowHistory(false);
+                setTestWord(clickedWord);
+                setError(null);
+                setIsLoading(true);
+                
+                try {
+                  const start = performance.now();
+                  const result = await invoke<LookupResult>("lookup_word", { word: clickedWord });
+                  const time = performance.now() - start;
+                  
+                  setLookupTime(time);
+                  
+                  if (result.success && result.data) {
+                    setWord(result.data.word);
+                    setDefinition(result.data);
+                    setFromCache(true);
+                    
+                    // Add to history
+                    historyManager.addEntry(
+                      result.data.word,
+                      "History navigation",
+                      result.data.definitions[0]
+                    );
+                  } else {
+                    setError(result.error || "Word not found");
+                    setDefinition(null);
+                  }
+                  
+                  await loadCacheStats();
+                } catch (error) {
+                  console.error("Lookup error:", error);
+                  setError("Failed to connect to dictionary service");
+                  setDefinition(null);
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              onClose={() => setShowHistory(false)}
+            />
+          </div>
+        </div>
+      )}
       
       {/* Multi-Definition Test */}
       {showMultiDefTest && <TestMultiDefinition />}

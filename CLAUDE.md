@@ -195,11 +195,10 @@ Claude will:
 2. **Implementation**
    - Create/modify required files
    - Write comprehensive tests
-   - Update documentation
    - Commit with descriptive message
 
 3. **Verification**
-   - Run tests
+   - Claude run tests 
    - Check performance metrics
    - Update implementation log
    - Prepare handoff notes
@@ -227,7 +226,7 @@ When implementation session ends, Claude will:
    - Document any blockers
 
 2. **Create Handoff File**
-   `docs/handoff_YYYYMMDD_HHMM.md`:
+   `docs/handoff_stepX.md`:
    ```markdown
    # Implementation Handoff
    

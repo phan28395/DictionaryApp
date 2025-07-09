@@ -4,12 +4,16 @@ import { ApiResponse, WordDefinition, SearchResult } from '../types/dictionary';
 import { MultiDefinitionResponse, EnhancedWordDefinition } from '../types/enhanced-dictionary';
 import { config } from '../config';
 import { authRoutes } from './auth';
+import { historyRoutes } from './history';
 import { optionalAuthenticate } from '../middleware/auth';
 import { authService } from '../services/auth';
 
 export async function defineRoutes(server: FastifyInstance) {
   // Register auth routes
   await server.register(authRoutes, { prefix: '/api/v1/auth' });
+  
+  // Register history routes
+  await server.register(historyRoutes, { prefix: '/api/v1' });
   
   // Health check endpoint
   server.get('/health', async () => {
@@ -24,7 +28,7 @@ export async function defineRoutes(server: FastifyInstance) {
     };
   });
 
-  // Get word definition
+  // Get word definition (for backward compatibility)
   server.get<{
     Params: { word: string };
   }>('/api/v1/define/:word', async (request, reply) => {
@@ -110,6 +114,48 @@ export async function defineRoutes(server: FastifyInstance) {
     return {
       success: true,
       data: stats,
+      timestamp: Date.now(),
+    };
+  });
+
+  // Dictionary lookup endpoint with history tracking
+  server.get<{
+    Params: { word: string };
+  }>('/api/v1/dictionary/lookup/:word', { preHandler: optionalAuthenticate }, async (request, reply) => {
+    const { word } = request.params;
+    
+    if (!word || word.trim().length === 0) {
+      reply.code(400);
+      return {
+        success: false,
+        error: 'Word parameter is required',
+        timestamp: Date.now(),
+      };
+    }
+
+    const definition = getDefinition(word);
+    
+    if (!definition) {
+      reply.code(404);
+      return {
+        success: false,
+        error: `Word '${word}' not found`,
+        timestamp: Date.now(),
+      };
+    }
+
+    // Track user history if authenticated and header is set
+    if (request.user && request.headers['x-track-history'] === 'true') {
+      try {
+        await authService.addToHistory(request.user.userId, word);
+      } catch (error) {
+        request.log.error('Failed to track user history:', error);
+      }
+    }
+
+    return {
+      success: true,
+      data: definition,
       timestamp: Date.now(),
     };
   });

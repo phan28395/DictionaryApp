@@ -1,6 +1,7 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useSettings } from '../hooks/useSettings';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
+import { historyManager } from '../utils/history-manager';
 import '../styles/animations.css';
 
 interface SettingsProps {
@@ -38,13 +39,20 @@ const SettingsTab = memo(({
 
 export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
   const { settings, updateSettings, resetSettings, isSaving } = useSettings();
-  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'cache' | 'advanced'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'cache' | 'privacy' | 'advanced'>('general');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const { containerRef } = useKeyboardNavigation({
     onEscape: onClose,
     enableFocusTrap: true
   });
+
+  // Sync privacy mode with history manager
+  useEffect(() => {
+    if (settings.privacy) {
+      historyManager.setPrivacyMode(settings.privacy.privacyMode);
+    }
+  }, [settings.privacy?.privacyMode]);
 
   if (!isOpen) return null;
 
@@ -101,6 +109,7 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
           <SettingsTab label="General" isActive={activeTab === 'general'} onClick={() => setActiveTab('general')} />
           <SettingsTab label="Appearance" isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} />
           <SettingsTab label="Cache" isActive={activeTab === 'cache'} onClick={() => setActiveTab('cache')} />
+          <SettingsTab label="Privacy" isActive={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} />
           <SettingsTab label="Advanced" isActive={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} />
         </div>
 
@@ -344,6 +353,154 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
                   improving response time.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Privacy Tab */}
+          {activeTab === 'privacy' && (
+            <div className="animate-fade-in">
+              <h3 style={{ marginTop: 0 }}>History Settings</h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.privacy?.enableHistory ?? true}
+                  onChange={(e) => updateSettings('privacy', { enableHistory: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Enable word lookup history
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.privacy?.privacyMode ?? false}
+                  onChange={(e) => updateSettings('privacy', { privacyMode: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Privacy mode (disable all tracking)
+              </label>
+
+              <div style={{ opacity: settings.privacy?.enableHistory && !settings.privacy?.privacyMode ? 1 : 0.5, marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.privacy?.syncHistory ?? true}
+                    onChange={(e) => updateSettings('privacy', { syncHistory: e.target.checked })}
+                    disabled={!settings.privacy?.enableHistory || settings.privacy?.privacyMode}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Sync history across devices (when logged in)
+                </label>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    Auto-clear history after:
+                  </label>
+                  <select
+                    value={settings.privacy?.autoClearAfter ?? 'never'}
+                    onChange={(e) => updateSettings('privacy', { autoClearAfter: e.target.value })}
+                    disabled={!settings.privacy?.enableHistory || settings.privacy?.privacyMode}
+                    style={{
+                      width: '200px',
+                      padding: '0.5rem',
+                      background: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
+                      color: '#fff'
+                    }}
+                  >
+                    <option value="never">Never</option>
+                    <option value="day">1 Day</option>
+                    <option value="week">1 Week</option>
+                    <option value="month">1 Month</option>
+                    <option value="year">1 Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3>Data Collection</h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.privacy?.allowAnalytics ?? false}
+                  onChange={(e) => updateSettings('privacy', { allowAnalytics: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Allow anonymous usage analytics
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.privacy?.allowCrashReports ?? true}
+                  onChange={(e) => updateSettings('privacy', { allowCrashReports: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Send crash reports
+              </label>
+
+              <p style={{ fontSize: '0.875rem', color: '#888', marginTop: '1rem' }}>
+                Your privacy is important to us. We never share your personal data with third parties.
+                All data is encrypted and stored securely.
+              </p>
+
+              <h3>Data Management</h3>
+              
+              <button
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to clear all history?')) {
+                    await historyManager.clearHistory();
+                    alert('History cleared successfully');
+                  }
+                }}
+                className="button-press color-transition"
+                style={{
+                  background: '#8b0000',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  marginBottom: '0.5rem',
+                  marginRight: '0.5rem'
+                }}
+              >
+                Clear All History
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const data = await historyManager.exportHistory('json');
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `word-history-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error('Failed to export data:', err);
+                    alert('Failed to export data');
+                  }
+                }}
+                className="button-press color-transition"
+                style={{
+                  background: '#444',
+                  border: 'none',
+                  color: '#fff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  marginBottom: '0.5rem'
+                }}
+              >
+                Export My Data
+              </button>
             </div>
           )}
 

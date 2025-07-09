@@ -40,6 +40,16 @@ export interface AppSettings {
     lowPowerMode: boolean;
     gpuAcceleration: boolean;
   };
+  
+  // Privacy settings
+  privacy?: {
+    enableHistory: boolean;
+    privacyMode: boolean;
+    syncHistory: boolean;
+    autoClearAfter: 'never' | 'day' | 'week' | 'month' | 'year';
+    allowAnalytics: boolean;
+    allowCrashReports: boolean;
+  };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -74,5 +84,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
     enableMetrics: true,
     lowPowerMode: false,
     gpuAcceleration: true
+  },
+  privacy: {
+    enableHistory: true,
+    privacyMode: false,
+    syncHistory: true,
+    autoClearAfter: 'never',
+    allowAnalytics: false,
+    allowCrashReports: true
   }
 };
