@@ -6,6 +6,7 @@ import { config } from '../config';
 import { authRoutes } from './auth';
 import { historyRoutes } from './history';
 import { searchRoutes } from './search';
+import { aiRoutes } from './ai';
 import { optionalAuthenticate } from '../middleware/auth';
 import { authService } from '../services/auth';
 import cacheManager from '../utils/cache-manager';
@@ -20,6 +21,9 @@ export async function defineRoutes(server: FastifyInstance) {
   
   // Register search routes
   await server.register(searchRoutes, { prefix: '/api/v1/search' });
+  
+  // Register AI routes
+  await server.register(aiRoutes, { prefix: '/api/v1/ai' });
   
   // Health check endpoint
   server.get('/health', async () => {

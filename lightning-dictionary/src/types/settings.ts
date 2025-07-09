@@ -50,6 +50,27 @@ export interface AppSettings {
     allowAnalytics: boolean;
     allowCrashReports: boolean;
   };
+  
+  // AI settings
+  ai?: {
+    enabled: boolean;
+    features: {
+      contextualDefinitions: boolean;
+      smartSummaries: boolean;
+      etymologyInsights: boolean;
+      difficultyAssessment: boolean;
+      usageExamples: boolean;
+      relatedConcepts: boolean;
+      translationContext: boolean;
+    };
+    provider: 'mock' | 'openai' | 'anthropic' | 'deepseek';
+    apiKey?: string;
+    useFallback: boolean;
+    cacheResults: boolean;
+    maxCostPerMonth?: number;
+    showConfidence: boolean;
+    autoEnhance: boolean;
+  };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -92,5 +113,23 @@ export const DEFAULT_SETTINGS: AppSettings = {
     autoClearAfter: 'never',
     allowAnalytics: false,
     allowCrashReports: true
+  },
+  ai: {
+    enabled: false,
+    features: {
+      contextualDefinitions: true,
+      smartSummaries: true,
+      etymologyInsights: true,
+      difficultyAssessment: true,
+      usageExamples: true,
+      relatedConcepts: true,
+      translationContext: false
+    },
+    provider: 'mock',
+    useFallback: true,
+    cacheResults: true,
+    maxCostPerMonth: 10,
+    showConfidence: true,
+    autoEnhance: false
   }
 };

@@ -39,7 +39,7 @@ const SettingsTab = memo(({
 
 export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
   const { settings, updateSettings, resetSettings, isSaving } = useSettings();
-  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'cache' | 'privacy' | 'advanced'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'cache' | 'privacy' | 'ai' | 'advanced'>('general');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const { containerRef } = useKeyboardNavigation({
@@ -110,6 +110,7 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
           <SettingsTab label="Appearance" isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} />
           <SettingsTab label="Cache" isActive={activeTab === 'cache'} onClick={() => setActiveTab('cache')} />
           <SettingsTab label="Privacy" isActive={activeTab === 'privacy'} onClick={() => setActiveTab('privacy')} />
+          <SettingsTab label="AI" isActive={activeTab === 'ai'} onClick={() => setActiveTab('ai')} />
           <SettingsTab label="Advanced" isActive={activeTab === 'advanced'} onClick={() => setActiveTab('advanced')} />
         </div>
 
@@ -501,6 +502,224 @@ export const Settings = memo(({ isOpen, onClose }: SettingsProps) => {
               >
                 Export My Data
               </button>
+            </div>
+          )}
+
+          {/* AI Tab */}
+          {activeTab === 'ai' && (
+            <div className="animate-fade-in">
+              <h3 style={{ marginTop: 0 }}>AI Enhancement</h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.ai?.enabled ?? false}
+                  onChange={(e) => updateSettings('ai', { enabled: e.target.checked })}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Enable AI-enhanced features
+              </label>
+
+              <div style={{ opacity: settings.ai?.enabled ? 1 : 0.5 }}>
+                <h4 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>AI Features</h4>
+                
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.contextualDefinitions ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, contextualDefinitions: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Contextual definitions based on sentence
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.smartSummaries ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, smartSummaries: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Smart word summaries
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.etymologyInsights ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, etymologyInsights: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Etymology insights
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.difficultyAssessment ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, difficultyAssessment: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Word difficulty assessment
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.usageExamples ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, usageExamples: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  AI-generated usage examples
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.features.relatedConcepts ?? true}
+                    onChange={(e) => updateSettings('ai', { 
+                      features: { ...settings.ai?.features, relatedConcepts: e.target.checked }
+                    })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Related concepts discovery
+                </label>
+
+                <h4 style={{ marginBottom: '0.5rem' }}>AI Provider</h4>
+                
+                <select
+                  value={settings.ai?.provider ?? 'mock'}
+                  onChange={(e) => updateSettings('ai', { provider: e.target.value as any })}
+                  disabled={!settings.ai?.enabled}
+                  style={{
+                    width: '200px',
+                    padding: '0.5rem',
+                    background: '#2a2a2a',
+                    border: '1px solid #444',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    marginBottom: '1rem'
+                  }}
+                >
+                  <option value="mock">Mock (Development)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic Claude</option>
+                  <option value="deepseek">DeepSeek</option>
+                </select>
+
+                {settings.ai?.provider !== 'mock' && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                      API Key:
+                    </label>
+                    <input
+                      type="password"
+                      value={settings.ai?.apiKey ?? ''}
+                      onChange={(e) => updateSettings('ai', { apiKey: e.target.value })}
+                      disabled={!settings.ai?.enabled}
+                      placeholder="Enter your API key"
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        background: '#2a2a2a',
+                        border: '1px solid #444',
+                        borderRadius: '4px',
+                        color: '#fff'
+                      }}
+                    />
+                  </div>
+                )}
+
+                <h4 style={{ marginBottom: '0.5rem' }}>Options</h4>
+                
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.useFallback ?? true}
+                    onChange={(e) => updateSettings('ai', { useFallback: e.target.checked })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Use fallback when AI unavailable
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.cacheResults ?? true}
+                    onChange={(e) => updateSettings('ai', { cacheResults: e.target.checked })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cache AI results for performance
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.showConfidence ?? true}
+                    onChange={(e) => updateSettings('ai', { showConfidence: e.target.checked })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Show AI confidence levels
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai?.autoEnhance ?? false}
+                    onChange={(e) => updateSettings('ai', { autoEnhance: e.target.checked })}
+                    disabled={!settings.ai?.enabled}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Auto-enhance all definitions
+                </label>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    Monthly cost limit ($):
+                  </label>
+                  <input
+                    type="number"
+                    value={settings.ai?.maxCostPerMonth ?? 10}
+                    onChange={(e) => updateSettings('ai', { maxCostPerMonth: parseFloat(e.target.value) || 0 })}
+                    disabled={!settings.ai?.enabled}
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    style={{
+                      width: '100px',
+                      padding: '0.5rem',
+                      background: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
+                      color: '#fff'
+                    }}
+                  />
+                </div>
+
+                <p style={{ fontSize: '0.875rem', color: '#888', marginTop: '1rem' }}>
+                  AI features enhance dictionary lookups with contextual understanding, smart summaries, 
+                  and intelligent insights. Currently in preview mode with mock responses.
+                </p>
+              </div>
             </div>
           )}
 
