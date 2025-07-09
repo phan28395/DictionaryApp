@@ -9,7 +9,7 @@ interface CrossReferenceProps {
   className?: string;
 }
 
-export const CrossReference: React.FC<CrossReferenceProps> = ({
+export const CrossReference = React.memo<CrossReferenceProps>(({
   text,
   onWordClick,
   excludeWords = new Set(),
@@ -58,6 +58,14 @@ export const CrossReference: React.FC<CrossReferenceProps> = ({
       })}
     </span>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  return (
+    prevProps.text === nextProps.text &&
+    prevProps.className === nextProps.className &&
+    prevProps.onWordClick === nextProps.onWordClick &&
+    prevProps.excludeWords === nextProps.excludeWords
+  );
+});
 
 export default CrossReference;

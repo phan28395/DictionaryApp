@@ -7,6 +7,8 @@ import { authRoutes } from './auth';
 import { historyRoutes } from './history';
 import { optionalAuthenticate } from '../middleware/auth';
 import { authService } from '../services/auth';
+import cacheManager from '../utils/cache-manager';
+import { connectionPool } from '../database/db';
 
 export async function defineRoutes(server: FastifyInstance) {
   // Register auth routes
@@ -44,7 +46,7 @@ export async function defineRoutes(server: FastifyInstance) {
       return response;
     }
 
-    const definition = getDefinition(word);
+    const definition = await getDefinition(word);
     
     if (!definition) {
       reply.code(404);
@@ -87,7 +89,7 @@ export async function defineRoutes(server: FastifyInstance) {
       return response;
     }
 
-    const results = searchWords(query);
+    const results = await searchWords(query);
 
     // Set cache headers (shorter for search results)
     reply.headers({
@@ -133,7 +135,7 @@ export async function defineRoutes(server: FastifyInstance) {
       };
     }
 
-    const definition = getDefinition(word);
+    const definition = await getDefinition(word);
     
     if (!definition) {
       reply.code(404);
@@ -177,7 +179,7 @@ export async function defineRoutes(server: FastifyInstance) {
       return response;
     }
 
-    const enhancedDef = getEnhancedDefinition(word);
+    const enhancedDef = await getEnhancedDefinition(word);
     
     if (!enhancedDef) {
       reply.code(404);
@@ -233,7 +235,7 @@ export async function defineRoutes(server: FastifyInstance) {
 
     // Limit batch size
     const limitedWords = words.slice(0, 50);
-    const definitions = getMultipleDefinitions(limitedWords);
+    const definitions = await getMultipleDefinitions(limitedWords);
 
     // Set cache headers
     reply.headers({
@@ -266,7 +268,7 @@ export async function defineRoutes(server: FastifyInstance) {
       };
     }
 
-    const circularRefs = detectCircularReferences(word, maxDepth);
+    const circularRefs = await detectCircularReferences(word, maxDepth);
     
     return {
       success: true,
@@ -276,6 +278,51 @@ export async function defineRoutes(server: FastifyInstance) {
         circularPaths: circularRefs,
         maxDepthChecked: maxDepth,
       },
+      timestamp: Date.now(),
+    };
+  });
+
+  // Performance monitoring endpoint
+  server.get('/api/v1/performance/stats', async (_request, reply) => {
+    const cacheInfo = cacheManager.getCacheInfo();
+    const poolStats = await connectionPool.getPoolStats();
+    const dictStats = getDictionaryStats();
+    
+    return {
+      success: true,
+      data: {
+        cache: cacheInfo,
+        database: poolStats,
+        dictionary: dictStats,
+        uptime: process.uptime(),
+        memory: {
+          heapUsed: process.memoryUsage().heapUsed / 1024 / 1024, // MB
+          heapTotal: process.memoryUsage().heapTotal / 1024 / 1024, // MB
+          rss: process.memoryUsage().rss / 1024 / 1024, // MB
+        }
+      },
+      timestamp: Date.now(),
+    };
+  });
+
+  // Cache management endpoints
+  server.delete('/api/v1/cache/flush', async (request, reply) => {
+    // Require admin authentication or special header
+    const adminKey = request.headers['x-admin-key'];
+    if (adminKey !== process.env.ADMIN_KEY) {
+      reply.code(401);
+      return {
+        success: false,
+        error: 'Unauthorized',
+        timestamp: Date.now(),
+      };
+    }
+
+    await cacheManager.flush();
+    
+    return {
+      success: true,
+      message: 'Cache flushed successfully',
       timestamp: Date.now(),
     };
   });

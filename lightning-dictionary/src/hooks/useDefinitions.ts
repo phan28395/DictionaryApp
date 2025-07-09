@@ -9,6 +9,7 @@ import {
 } from '../types/enhanced-dictionary';
 import { usePrefetch } from './usePrefetch';
 import { useSettings } from './useSettings';
+import { definitionBatcher } from '../utils/request-batcher';
 
 interface UseDefinitionsOptions {
   useMockData?: boolean;
@@ -105,17 +106,19 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
       } catch (tauriError) {
         console.warn('Tauri invoke failed, trying API fallback:', tauriError);
         
-        // Fallback to direct API call
+        // Fallback to API call with batching
         try {
-          const apiResponse = await fetch(`http://localhost:3456/api/v1/define/${encodeURIComponent(word)}`);
-          const data = await apiResponse.json();
+          // Use the batcher for better performance
+          const batchedResult = await definitionBatcher.get(word.toLowerCase());
           
-          if (data.success && data.data) {
-            const enhanced = convertLegacyToEnhanced(word, data.data as LegacyWordDefinition);
+          if (batchedResult) {
             if (cacheResults) {
-              definitionCache.set(word.toLowerCase(), enhanced);
+              definitionCache.set(word.toLowerCase(), batchedResult);
             }
-            setDefinition(enhanced);
+            setDefinition(batchedResult);
+            
+            // Track lookup for prefetch patterns
+            trackWordLookup(word, batchedResult);
           } else {
             // Final fallback to mock data
             const mockDef = generateMockDefinitions(word);
@@ -155,19 +158,40 @@ export function useDefinitions(options: UseDefinitionsOptions = {}): UseDefiniti
 // Hook for prefetching related words
 export function usePrefetchDefinitions() {
   const prefetchWords = useCallback(async (words: string[]) => {
+    // Filter words not already in cache
+    const wordsToFetch = words.filter(word => !definitionCache.has(word.toLowerCase()));
+    
+    if (wordsToFetch.length === 0) {
+      return;
+    }
+
     // Prefetch in background without blocking UI
-    setTimeout(() => {
-      words.forEach(async (word) => {
-        if (!definitionCache.has(word.toLowerCase())) {
-          try {
-            // In production, this would call the actual API
-            const mockDef = generateMockDefinitions(word);
-            definitionCache.set(word.toLowerCase(), mockDef);
-          } catch (err) {
-            console.warn(`Failed to prefetch ${word}:`, err);
+    setTimeout(async () => {
+      try {
+        // Use batcher to fetch multiple words efficiently
+        const results = await definitionBatcher.getMultiple(wordsToFetch.map(w => w.toLowerCase()));
+        
+        // Cache the results
+        Object.entries(results).forEach(([word, definition]) => {
+          if (definition) {
+            definitionCache.set(word, definition);
           }
-        }
-      });
+        });
+      } catch (err) {
+        console.warn('Failed to prefetch words:', err);
+        
+        // Fallback to mock data for failed words
+        wordsToFetch.forEach(word => {
+          if (!definitionCache.has(word.toLowerCase())) {
+            try {
+              const mockDef = generateMockDefinitions(word);
+              definitionCache.set(word.toLowerCase(), mockDef);
+            } catch (err) {
+              console.warn(`Failed to generate mock for ${word}:`, err);
+            }
+          }
+        });
+      }
     }, 100);
   }, []);
 

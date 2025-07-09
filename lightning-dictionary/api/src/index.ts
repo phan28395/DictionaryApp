@@ -7,6 +7,8 @@ import { loadDictionary } from './services/dictionary';
 import { defineRoutes } from './routes';
 import { config } from './config';
 import { initDatabase, closeDatabase } from './database/init';
+import cacheManager from './utils/cache-manager';
+import { connectionPool } from './database/db';
 
 const server = Fastify({
   logger: {
@@ -74,6 +76,8 @@ signals.forEach((signal) => {
   process.on(signal, async () => {
     server.log.info(`Received ${signal}, shutting down gracefully`);
     await server.close();
+    await cacheManager.close();
+    await connectionPool.closePool();
     await closeDatabase();
     process.exit(0);
   });

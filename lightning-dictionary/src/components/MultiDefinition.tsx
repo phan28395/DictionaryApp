@@ -23,7 +23,7 @@ interface DefinitionItemProps {
   currentWord: string;
 }
 
-const DefinitionItem: React.FC<DefinitionItemProps> = ({ definition, index, onWordClick, currentWord }) => {
+const DefinitionItem = React.memo<DefinitionItemProps>(({ definition, index, onWordClick, currentWord }) => {
   const excludeWords = useMemo(() => {
     const words = new Set<string>();
     words.add(currentWord.toLowerCase());
@@ -117,9 +117,17 @@ const DefinitionItem: React.FC<DefinitionItemProps> = ({ definition, index, onWo
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.definition.id === nextProps.definition.id &&
+    prevProps.index === nextProps.index &&
+    prevProps.currentWord === nextProps.currentWord &&
+    prevProps.onWordClick === nextProps.onWordClick
+  );
+});
 
-const POSGroupComponent: React.FC<POSGroupProps> = ({ 
+const POSGroupComponent = React.memo<POSGroupProps>(({ 
   group, 
   word, 
   onWordClick, 
@@ -164,9 +172,9 @@ const POSGroupComponent: React.FC<POSGroupProps> = ({
       )}
     </div>
   );
-};
+});
 
-export const MultiDefinition: React.FC<MultiDefinitionProps> = ({ 
+export const MultiDefinition = React.memo<MultiDefinitionProps>(({ 
   definition, 
   onWordClick,
   expandAll = true 
@@ -236,6 +244,14 @@ export const MultiDefinition: React.FC<MultiDefinitionProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for MultiDefinition
+  return (
+    prevProps.definition.word === nextProps.definition.word &&
+    prevProps.definition.rank === nextProps.definition.rank &&
+    prevProps.expandAll === nextProps.expandAll &&
+    prevProps.onWordClick === nextProps.onWordClick
+  );
+});
 
 export default MultiDefinition;

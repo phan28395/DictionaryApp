@@ -3,6 +3,7 @@ import { join } from 'path';
 import { DictionaryData, WordDefinition, SearchResult } from '../types/dictionary';
 import { EnhancedWordDefinition, convertLegacyToEnhanced, generateMockDefinitions } from '../types/enhanced-dictionary';
 import { config } from '../config';
+import cacheManager, { Cacheable } from '../utils/cache-manager';
 
 let dictionaryData: DictionaryData | null = null;
 let wordIndex: Map<string, WordDefinition> = new Map();
@@ -37,13 +38,37 @@ export async function loadDictionary(): Promise<void> {
   }
 }
 
-export function getDefinition(word: string): WordDefinition | null {
-  return wordIndex.get(word.toLowerCase()) || null;
+export async function getDefinition(word: string): Promise<WordDefinition | null> {
+  const cacheKey = `def:${word.toLowerCase()}`;
+  
+  // Try cache first
+  const cached = await cacheManager.get<WordDefinition>(cacheKey);
+  if (cached !== null) {
+    return cached;
+  }
+  
+  // Get from memory
+  const definition = wordIndex.get(word.toLowerCase()) || null;
+  
+  // Cache the result
+  if (definition) {
+    await cacheManager.set(cacheKey, definition, { ttl: 3600 }); // 1 hour
+  }
+  
+  return definition;
 }
 
-export function searchWords(query: string): SearchResult[] {
+export async function searchWords(query: string): Promise<SearchResult[]> {
   if (!query || query.length < config.search.minQueryLength) {
     return [];
+  }
+
+  const cacheKey = `search:${query.toLowerCase()}`;
+  
+  // Try cache first
+  const cached = await cacheManager.get<SearchResult[]>(cacheKey);
+  if (cached !== null) {
+    return cached;
   }
 
   const normalizedQuery = query.toLowerCase();
@@ -70,6 +95,7 @@ export function searchWords(query: string): SearchResult[] {
   }
 
   if (firstMatch === -1) {
+    await cacheManager.set(cacheKey, [], { ttl: 300 }); // Cache empty results for 5 minutes
     return [];
   }
 
@@ -94,6 +120,9 @@ export function searchWords(query: string): SearchResult[] {
   // Sort by frequency (most common first)
   results.sort((a, b) => b.frequency - a.frequency);
 
+  // Cache the results
+  await cacheManager.set(cacheKey, results, { ttl: 300 }); // 5 minutes
+
   return results;
 }
 
@@ -105,41 +134,63 @@ export function getDictionaryStats() {
 }
 
 // Enhanced definition support
-export function getEnhancedDefinition(word: string): EnhancedWordDefinition | null {
-  const legacyDef = getDefinition(word);
+export async function getEnhancedDefinition(word: string): Promise<EnhancedWordDefinition | null> {
+  const cacheKey = `enhanced:${word.toLowerCase()}`;
+  
+  // Try cache first
+  const cached = await cacheManager.get<EnhancedWordDefinition>(cacheKey);
+  if (cached !== null) {
+    return cached;
+  }
+  
+  const legacyDef = await getDefinition(word);
   
   if (!legacyDef) {
     // Try mock data in development
     if (process.env.NODE_ENV === 'development') {
-      return generateMockDefinitions(word);
+      const mockDef = generateMockDefinitions(word);
+      if (mockDef) {
+        await cacheManager.set(cacheKey, mockDef, { ttl: 3600 });
+      }
+      return mockDef;
     }
     return null;
   }
   
   // Convert legacy format to enhanced format
-  return convertLegacyToEnhanced(word, legacyDef);
+  const enhanced = convertLegacyToEnhanced(word, legacyDef);
+  
+  // Cache the enhanced definition
+  if (enhanced) {
+    await cacheManager.set(cacheKey, enhanced, { ttl: 3600 });
+  }
+  
+  return enhanced;
 }
 
 // Get multiple words at once (for prefetching)
-export function getMultipleDefinitions(words: string[]): Record<string, EnhancedWordDefinition> {
+export async function getMultipleDefinitions(words: string[]): Promise<Record<string, EnhancedWordDefinition>> {
   const results: Record<string, EnhancedWordDefinition> = {};
   
-  for (const word of words) {
-    const enhanced = getEnhancedDefinition(word);
+  // Process in parallel for better performance
+  const promises = words.map(async (word) => {
+    const enhanced = await getEnhancedDefinition(word);
     if (enhanced) {
       results[word.toLowerCase()] = enhanced;
     }
-  }
+  });
+  
+  await Promise.all(promises);
   
   return results;
 }
 
 // Check for circular references between words
-export function detectCircularReferences(word: string, maxDepth: number = 5): string[] {
+export async function detectCircularReferences(word: string, maxDepth: number = 5): Promise<string[]> {
   const visited = new Set<string>();
   const circularRefs: string[] = [];
   
-  function checkWord(currentWord: string, path: string[], depth: number) {
+  async function checkWord(currentWord: string, path: string[], depth: number) {
     if (depth > maxDepth) return;
     
     const normalizedWord = currentWord.toLowerCase();
@@ -151,7 +202,7 @@ export function detectCircularReferences(word: string, maxDepth: number = 5): st
     if (visited.has(normalizedWord)) return;
     visited.add(normalizedWord);
     
-    const definition = getEnhancedDefinition(currentWord);
+    const definition = await getEnhancedDefinition(currentWord);
     if (!definition) return;
     
     // Check all related words
@@ -168,12 +219,14 @@ export function detectCircularReferences(word: string, maxDepth: number = 5): st
     // Add related words
     definition.relatedWords?.forEach(word => relatedWords.add(word));
     
-    // Check each related word
-    relatedWords.forEach(relatedWord => {
-      checkWord(relatedWord, [...path, normalizedWord], depth + 1);
-    });
+    // Check each related word - process in parallel
+    const promises = Array.from(relatedWords).map(relatedWord => 
+      checkWord(relatedWord, [...path, normalizedWord], depth + 1)
+    );
+    
+    await Promise.all(promises);
   }
   
-  checkWord(word, [], 0);
+  await checkWord(word, [], 0);
   return circularRefs;
 }

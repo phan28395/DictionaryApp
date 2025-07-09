@@ -1,9 +1,8 @@
-import knex from 'knex';
-import knexConfig from '../../knexfile';
+// Use connection pool for better performance and resource management
+import connectionPool, { db } from '../utils/connection-pool';
 
-const environment = process.env.NODE_ENV || 'development';
-const config = knexConfig[environment];
-
-const db = knex(config);
-
+// Export the pooled database connection
 export default db;
+
+// Export connection pool for advanced usage
+export { connectionPool };

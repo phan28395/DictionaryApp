@@ -9,7 +9,7 @@ interface WordHistoryProps {
   onClose?: () => void;
 }
 
-export const WordHistory: React.FC<WordHistoryProps> = ({ onWordClick, onClose }) => {
+export const WordHistory = React.memo<WordHistoryProps>(({ onWordClick, onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -239,4 +239,4 @@ export const WordHistory: React.FC<WordHistoryProps> = ({ onWordClick, onClose }
       )}
     </div>
   );
-};
+});

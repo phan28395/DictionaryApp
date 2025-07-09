@@ -5,6 +5,7 @@ import { performanceTracker } from "./utils/performance";
 import { Settings } from "./components/Settings";
 import { TestMultiDefinition } from "./components/TestMultiDefinition";
 import { WordHistory } from "./components/WordHistory";
+import { PerformanceMonitor } from "./components/PerformanceMonitor";
 import { historyManager } from "./utils/history-manager";
 import "./App.css";
 
@@ -43,6 +44,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showMultiDefTest, setShowMultiDefTest] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
 
   useEffect(() => {
     // Listen for word definition events from cache
@@ -194,6 +196,19 @@ function App() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1>⚡ Lightning Dictionary</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+            className="button-press color-transition"
+            style={{
+              background: showPerformanceMonitor ? '#4a5568' : '#333',
+              border: '1px solid #555',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              fontSize: '0.9rem'
+            }}
+          >
+            📊 Performance
+          </button>
           <button
             onClick={() => setShowHistory(true)}
             className="button-press color-transition"
@@ -490,6 +505,13 @@ function App() {
       
       {/* Multi-Definition Test */}
       {showMultiDefTest && <TestMultiDefinition />}
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor 
+        isVisible={showPerformanceMonitor}
+        position="bottom-right"
+        onClose={() => setShowPerformanceMonitor(false)}
+      />
     </div>
   );
 }

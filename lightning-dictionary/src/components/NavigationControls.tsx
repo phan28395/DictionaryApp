@@ -9,7 +9,7 @@ interface NavigationControlsProps {
   currentWord?: string;
 }
 
-export const NavigationControls: React.FC<NavigationControlsProps> = ({
+export const NavigationControls = React.memo<NavigationControlsProps>(({
   canGoBack,
   canGoForward,
   onBack,
@@ -49,6 +49,6 @@ export const NavigationControls: React.FC<NavigationControlsProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default NavigationControls;
