@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Dictionary Data Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #f0f0f0;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #242424;
+        }
+        .test-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #60a5fa;
+        }
+        .definition-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #60a5fa;
+            margin-right: 8px;
+        }
+        .synonyms, .antonyms {
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .synonym {
+            color: #60a5fa;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .antonym {
+            color: #f87171;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .usage {
+            color: #a0a0a0;
+            font-style: italic;
+        }
+        .source {
+            color: #606060;
+            font-size: 12px;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        .example {
+            background: rgba(96, 165, 250, 0.1);
+            border-left: 3px solid #60a5fa;
+            padding: 8px 12px;
+            margin: 5px 0;
+            font-style: italic;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #065f46;
+            color: #a7f3d0;
+        }
+        .status.error {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+        button {
+            background: #60a5fa;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Dictionary Data Test</h1>
+    
+    <div class="test-section">
+        <div class="test-title">Test Enhanced Dictionary Features</div>
+        <p>This page tests the enhanced dictionary data with synonyms, antonyms, usage examples, and source attribution.</p>
+        
+        <button onclick="testEnhancedData()">Load Enhanced Data</button>
+        <button onclick="testAPIEndpoint()">Test API Endpoint</button>
+        
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Test data that matches the enhanced format
+        const mockEnhancedData = {
+            good: {
+                word: 'good',
+                pos: 'adjective',
+                definitions: ['Having desirable or positive qualities'],
+                synonyms: ['excellent', 'fine', 'great'],
+                antonyms: ['bad', 'poor'],
+                examples: ['This is a good example of enhanced data'],
+                usage: 'informal',
+                source: 'Lightning Dictionary Enhanced Data v1.0'
+            },
+            run: {
+                word: 'run',
+                pos: 'verb',
+                definitions: ['Move at a speed faster than a walk'],
+                synonyms: ['sprint', 'race', 'dash'],
+                antonyms: [],
+                examples: ['She ran to catch the bus'],
+                usage: 'common',
+                source: 'Lightning Dictionary Enhanced Data v1.0'
+            }
+        };
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status ' + (isError ? 'error' : 'success');
+            statusDiv.textContent = message;
+        }
+
+        function displayEnhancedData(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            Object.entries(data).forEach(([word, entry]) => {
+                const defBox = document.createElement('div');
+                defBox.className = 'definition-box';
+                
+                let html = `
+                    <h3>${word} <span style="color: #60a5fa;">(${entry.pos})</span></h3>
+                    <div><span class="field-label">Definition:</span> ${entry.definitions.join('; ')}</div>
+                `;
+                
+                if (entry.examples && entry.examples.length > 0) {
+                    html += '<div><span class="field-label">Examples:</span></div>';
+                    entry.examples.forEach(ex => {
+                        html += `<div class="example">${ex}</div>`;
+                    });
+                }
+                
+                if (entry.synonyms && entry.synonyms.length > 0) {
+                    html += '<div class="synonyms"><span class="field-label">Synonyms:</span> ';
+                    entry.synonyms.forEach(syn => {
+                        html += `<span class="synonym" onclick="alert('Would look up: ${syn}')">${syn}</span>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (entry.antonyms && entry.antonyms.length > 0) {
+                    html += '<div class="antonyms"><span class="field-label">Antonyms:</span> ';
+                    entry.antonyms.forEach(ant => {
+                        html += `<span class="antonym" onclick="alert('Would look up: ${ant}')">${ant}</span>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (entry.usage) {
+                    html += `<div><span class="field-label">Usage:</span> <span class="usage">${entry.usage}</span></div>`;
+                }
+                
+                if (entry.source) {
+                    html += `<div class="source"><span class="field-label">Source:</span> ${entry.source}</div>`;
+                }
+                
+                defBox.innerHTML = html;
+                resultsDiv.appendChild(defBox);
+            });
+        }
+
+        function testEnhancedData() {
+            showStatus('Loading enhanced data from mock data...');
+            displayEnhancedData(mockEnhancedData);
+            showStatus('Enhanced data loaded successfully!');
+        }
+
+        async function testAPIEndpoint() {
+            showStatus('Testing API endpoint...');
+            
+            try {
+                // Test with a word that should have enhanced data
+                const response = await fetch('http://localhost:3001/api/definitions/good');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    const enhanced = data.data;
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '<h3>API Response:</h3><pre>' + JSON.stringify(enhanced, null, 2) + '</pre>';
+                    
+                    // Check if enhanced fields are present
+                    let hasEnhancedFields = false;
+                    if (enhanced.posGroups) {
+                        enhanced.posGroups.forEach(group => {
+                            group.definitions.forEach(def => {
+                                if (def.synonyms || def.antonyms || def.usage || def.source) {
+                                    hasEnhancedFields = true;
+                                }
+                            });
+                        });
+                    }
+                    
+                    if (hasEnhancedFields) {
+                        showStatus('API returned enhanced data successfully!');
+                    } else {
+                        showStatus('API returned data but without enhanced fields. Make sure enhanced dictionary is loaded.', true);
+                    }
+                } else {
+                    showStatus('API request failed: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch (error) {
+                showStatus('Error connecting to API: ' + error.message, true);
+            }
+        }
+
+        // Load test data on page load
+        window.onload = () => {
+            testEnhancedData();
+        };
+    </script>
+</body>
+</html>

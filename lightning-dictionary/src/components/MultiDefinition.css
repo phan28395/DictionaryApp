@@ -237,6 +237,24 @@
   margin-right: 8px;
 }
 
+/* Source */
+.definition-source {
+  margin: 8px 0;
+  font-size: 12px;
+  color: #606060;
+  font-style: italic;
+}
+
+.source-label {
+  font-weight: 600;
+  margin-right: 8px;
+  font-style: normal;
+}
+
+.source-text {
+  opacity: 0.8;
+}
+
 /* Related Words */
 .related-words {
   margin: 20px 0;

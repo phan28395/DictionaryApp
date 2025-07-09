@@ -73,7 +73,7 @@ import { WordDefinition } from './dictionary';
 // Utility function to convert legacy format to enhanced format
 export function convertLegacyToEnhanced(
   word: string,
-  legacy: WordDefinition
+  legacy: WordDefinition & { synonyms?: string[]; antonyms?: string[]; usage?: string; source?: string }
 ): EnhancedWordDefinition {
   const pos = POS_MAP[legacy.pos] || 'noun';
   
@@ -87,7 +87,11 @@ export function convertLegacyToEnhanced(
       definitions: legacy.definitions.map((text, index) => ({
         id: `${word}-${pos}-${index}`,
         text,
-        examples: legacy.examples
+        examples: legacy.examples,
+        synonyms: legacy.synonyms,
+        antonyms: legacy.antonyms,
+        usage: legacy.usage,
+        source: legacy.source
       })),
       pronunciation: legacy.pronunciation
     }],

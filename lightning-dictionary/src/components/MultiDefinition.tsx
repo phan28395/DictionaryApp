@@ -114,6 +114,13 @@ const DefinitionItem = React.memo<DefinitionItemProps>(({ definition, index, onW
             />
           </div>
         )}
+        
+        {definition.source && (
+          <div className="definition-source">
+            <span className="source-label">Source:</span>
+            <span className="source-text">{definition.source}</span>
+          </div>
+        )}
       </div>
     </div>
   );

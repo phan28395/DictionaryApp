@@ -12,8 +12,20 @@ let searchIndex: Array<{ word: string; lowercase: string }> = [];
 
 export async function loadDictionary(): Promise<void> {
   try {
-    const dataPath = join(__dirname, '..', '..', '..', 'data', 'processed', 'dictionary.json');
-    const fileContent = await readFile(dataPath, 'utf-8');
+    // Try to load enhanced dictionary first, fallback to regular dictionary
+    let dataPath = join(__dirname, '..', '..', '..', 'data', 'processed', 'dictionary_enhanced.json');
+    let fileContent: string;
+    
+    try {
+      fileContent = await readFile(dataPath, 'utf-8');
+      console.log('Loading enhanced dictionary data...');
+    } catch (error) {
+      // Fallback to regular dictionary
+      dataPath = join(__dirname, '..', '..', '..', 'data', 'processed', 'dictionary.json');
+      fileContent = await readFile(dataPath, 'utf-8');
+      console.log('Loading standard dictionary data...');
+    }
+    
     dictionaryData = JSON.parse(fileContent);
 
     if (!dictionaryData || !dictionaryData.words) {
